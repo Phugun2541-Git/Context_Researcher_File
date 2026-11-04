@@ -168,9 +168,12 @@ void main() {
     expect(broken.check().status, LicenseStatus.machineUnreadable);
   });
 
-  test('ยังไม่ฝัง public key = ไม่รับใบอนุญาตใด ๆ', () {
+  test('ยังไม่ฝัง public key = ไม่รับใบอนุญาตใด ๆ แต่ยังต้องโชว์รหัสเครื่องให้คัดลอก', () {
     final service = serviceAt(DateTime.utc(2026, 1, 2), publicKey: '');
-    expect(service.check().status, LicenseStatus.notConfigured);
+    final state = service.check();
+
+    expect(state.status, LicenseStatus.notConfigured);
+    expect(state.machineId, machine, reason: 'ขั้นตอนตั้งระบบครั้งแรกต้องรู้รหัสเครื่องตัวเอง');
     expect(service.activateFromText(makeLic()).status, LicenseStatus.notConfigured);
   });
 

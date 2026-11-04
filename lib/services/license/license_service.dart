@@ -81,19 +81,22 @@ class LicenseService {
 
   /// ตรวจสถานะปัจจุบัน + บันทึกเวลาที่เห็นล่าสุด
   LicenseState check() {
-    if (!verifier.configured) {
-      return const LicenseState(
-        status: LicenseStatus.notConfigured,
-        message: 'แอปนี้ยังไม่ได้ฝังกุญแจตรวจใบอนุญาต (ยังไม่ได้ตั้งค่าก่อนแจก)',
-      );
-    }
-
+    // อ่านรหัสเครื่องก่อนเสมอ เพื่อให้หน้า activate โชว์รหัสให้คัดลอกได้ทุกสถานะ
+    // (รวมถึงตอนยังไม่ได้ฝัง public key ซึ่งเป็นขั้นแรกของการตั้งระบบ)
     final String machine;
     try {
       machine = machineIdProvider();
     } catch (e) {
       // อ่านรหัสเครื่องไม่ได้ ≠ โกง — บอกตรง ๆ ว่าอ่านไม่ได้ ไม่ใช่ว่าใบอนุญาตผิด
       return LicenseState(status: LicenseStatus.machineUnreadable, message: '$e');
+    }
+
+    if (!verifier.configured) {
+      return LicenseState(
+        status: LicenseStatus.notConfigured,
+        machineId: machine,
+        message: 'แอปนี้ยังไม่ได้ฝังกุญแจตรวจใบอนุญาต (ยังไม่ได้ตั้งค่าก่อนแจก)',
+      );
     }
 
     final record = store.read();
