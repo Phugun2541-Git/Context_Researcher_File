@@ -1,0 +1,36 @@
+name: context_researcher_file
+description: ค้นหาคำ/ประโยคในไฟล์ PDF, Excel, Word, CSV/TXT แบบรวดเร็ว (Windows desktop)
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.13.0
+  flutter: '>=3.47.0'   # pdfrx 2.11 ต้องการ Flutter 3.47+ (ลงด้วย FVM บนเครื่อง dev)
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # --- storage ---
+  sqlite3: ^2.4.6              # driver ffi ตรง ๆ (ใช้ FTS5 trigram ได้)
+  sqlite3_flutter_libs: ^0.5.26 # bundle sqlite รุ่นใหม่ไปกับแอป (ต้องมี trigram tokenizer)
+  path: ^1.9.0
+  path_provider: ^2.1.4
+
+  # --- file extraction ---
+  pdfrx: ^2.11.0               # PDFium: ดึง text + viewer + search highlight
+  archive: ^4.0.9              # แกะ zip ของ .xlsx/.docx
+  xml: ^6.5.0                  # อ่าน OOXML แบบ event stream (ประหยัด RAM)
+
+  # --- ui ---
+  file_picker: ^8.1.4
+  provider: ^6.1.2
+  intl: ^0.20.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
