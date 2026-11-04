@@ -11,8 +11,13 @@ build/
 .vscode/*
 !.vscode/settings.json
 
-# FVM
-.fvm/flutter_sdk
+# FVM (เก็บแค่ .fvmrc ที่ pin เวอร์ชัน ส่วน SDK เป็นของแต่ละเครื่อง)
+.fvm/
+
+# ไฟล์ที่ build สร้างเองตามรายชื่อ plugin — track ไว้จะชน pull ทุกครั้งที่ build
+windows/flutter/generated_plugin_registrant.cc
+windows/flutter/generated_plugin_registrant.h
+windows/flutter/generated_plugins.cmake
 
 # ไฟล์ระบบ
 Thumbs.db
