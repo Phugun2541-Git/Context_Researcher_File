@@ -1,7 +1,11 @@
 # HANDOFF — Context Researcher File
 
-> อัปเดตล่าสุด: 2026-11-04 · session แรก (วางโครง + ทำครบ flow หลัก)
+> อัปเดตล่าสุด: 2026-11-04 · รอบ 2 (แก้บั๊กจากการเทสจริง + ธีมหลายสี + หน้าตั้งค่า)
 > กฎ = `CLAUDE.md` · วิธีทำงาน = `SKILL.md`
+
+## 0. ผลเทสรอบ 1 บนแอปจริง (เจ้าของรัน)
+- **B/C/D/E ผ่านหมด** → index, ค้นไทยกลางคำ, PDF highlight + กด chip ไปหน้าถูก, เปิดไฟล์จริง, โหมดไม่ผูกโปรเจค **ยืนยันว่าใช้งานได้จริงแล้ว**
+- ไม่ผ่าน 2 ข้อ แก้แล้วในรอบ 2: เปิดมาไม่เต็มจอ (A-1) · ย่อหน้าต่างแล้ว layout ล้น (F-28)
 
 ## 1. สถานะตอนนี้
 โครงโปรเจคครบและเทสผ่านทั้งชุด (37 passed / 2 skipped) · `flutter analyze` ไม่มี issue
@@ -15,9 +19,12 @@
 | ค้นแบบไม่ผูกโปรเจค (scan สด ทยอยแสดงผล) | ✔ เทสกับไฟล์จริงใน `test/fixtures` |
 | extract: xlsx / docx / txt-csv | ✔ เทสกับไฟล์จริง |
 | extract: pdf (+ ตรวจไฟล์สแกน) | ⚠ โค้ดครบ แต่ **ยังไม่ได้รันพิสูจน์** (ไม่มี PDFium ใน container) |
-| preview PDF + highlight คำ (pdfrx) | ⚠ ต้อง verify บนแอปจริง |
-| preview Excel/Word/TXT + เลื่อนไปจุดที่พบ | ⚠ ต้อง verify บนแอปจริง |
-| เปิดไฟล์จริง / เปิดโฟลเดอร์ | ⚠ ต้อง verify บน Windows |
+| preview PDF + highlight คำ (pdfrx) | ✔ เจ้าของเทสผ่านแล้ว |
+| preview Word/TXT + เลื่อนไปจุดที่พบ | ✔ เจ้าของเทสผ่านแล้ว |
+| เปิดไฟล์จริง / เปิดโฟลเดอร์ | ✔ เจ้าของเทสผ่านแล้ว |
+| preview Excel เป็นตารางจริง (หัวคอลัมน์ + เลขแถว) | ⚠ ใหม่รอบ 2 รอ verify |
+| ธีม 5 สี + หน้าตั้งค่า | ⚠ ใหม่รอบ 2 รอ verify |
+| กันกดปุ่มซ้ำถี่ ๆ (spinner ระหว่างทำงาน) | ⚠ ใหม่รอบ 2 รอ verify |
 
 ## 2. วิธีรันบนเครื่อง Windows (ครั้งแรก)
 ต้องใช้ **Flutter ≥ 3.47.0** (pdfrx 2.11 บังคับ) — ลงด้วย FVM:
@@ -73,14 +80,16 @@ lib/
   app/
     app.dart                    MaterialApp + theme
     app_state.dart              ★ state กลาง: โปรเจค · โหมด · คำค้น · ผล · ไฟล์ที่เลือก
-    theme/app_colors.dart       AppPalette (semantic) + AppColors getter → สลับ theme ได้
+    theme/app_colors.dart       AppPalette + 5 ธีม (kThemeOptions) + applyTheme/themeNotifier
     theme/app_dimens.dart       token ขนาดอิงจอ: D.of(context).rw/rh/font*/icon*
     theme/app_theme.dart        ThemeData กลาง
     theme/motion.dart           Motion.fast/base/slow + FadeSlideIn + stagger
   domain/models.dart            FileKind · FileStatus · Project · Locator · Chunk · SearchHit · FileResult
+  domain/app_settings.dart      ค่าตั้งค่าที่ผู้ใช้ปรับได้ (ธีม/ฟอนต์/motion/ชนิดไฟล์/ขนาดไฟล์)
   data/
     db.dart                     ★ เปิด DB + migration (_steps) + probe FTS5 trigram
     project_repository.dart     CRUD โปรเจค + root
+    settings_repository.dart    อ่าน/เขียน app_setting (key-value)
     index_repository.dart       ★ เขียน/ลบ chunk · ค้นหา (FTS หรือ LIKE) · รวมผลต่อไฟล์
   services/
     match_util.dart             ★ findOccurrences / buildHit (snippet+offset) / escape FTS-LIKE
@@ -97,7 +106,8 @@ lib/
   ui/
     projects/projects_screen.dart · project_card.dart
     search/search_screen.dart (layout 3 คอลัมน์) · search_panel.dart · results_list.dart
-    preview/preview_pane.dart · pdf_preview.dart · lines_preview.dart
+    preview/preview_pane.dart · pdf_preview.dart · lines_preview.dart · sheet_preview.dart (ตาราง Excel)
+    settings/settings_screen.dart  ธีม · ขนาดตัวอักษร · เอฟเฟกต์ · ชนิดไฟล์ · ล้าง index
     widgets/common.dart         PanelCard · HighlightedText · HitChip · KindBadge · EmptyState · ScanProgressBar
 ```
 
@@ -118,8 +128,19 @@ lib/
 - **Word**: อ่านเฉพาะ `word/document.xml` + header/footer → ข้อความใน textbox/SmartArt/comment อาจไม่ติด
 - ไฟล์ใหญ่กว่า 64 MB ถูกข้าม (`kMaxFileSizeBytes`) · 1 ไฟล์เก็บได้ไม่เกิน 200,000 chunk
 
+## 6.5 ที่เพิ่มในรอบ 2
+- **หน้าต่างเปิดมาเต็มจอ** — แก้ที่ `Win32Window::Show()` (SW_SHOWMAXIMIZED) ไม่ใช่ที่ `main.cpp` เพราะ Show() ถูกเรียกหลัง Flutter เฟรมแรกและทับค่าที่ตั้งไว้ก่อนหน้า
+- **ขนาดหน้าต่างขั้นต่ำ 980×640** (`WM_GETMINMAXINFO`) + หน้าค้นหายุบเป็น preview ทับผลเมื่อกว้าง < 1150
+- **Excel preview เป็นตารางจริง** (`sheet_preview.dart`) — หัวคอลัมน์ A B C · เลขแถว · แท็บเลือก sheet · เลื่อนไป highlight ช่องเป้าหมายทั้งแนวตั้งและแนวนอน
+- **ธีม 5 สี** (อินดิโก/ม่วง/เขียวมรกต/ส้มอำพัน/โหมดมืด) เปลี่ยนแล้วมีผลทันที เก็บค่าลง `app_setting` (migration step 2)
+- **หน้าตั้งค่า**: ธีม · ขนาดตัวอักษร · ปิดเอฟเฟกต์เคลื่อนไหว · ชนิดไฟล์ที่จะค้น · ขนาดไฟล์สูงสุด · ที่อยู่+ขนาดไฟล์ index + ปุ่มล้าง index · เวอร์ชัน
+- **สีประจำชนิดไฟล์** (PDF แดง · Excel เขียว · Word น้ำเงิน · Text เทา) ใช้ที่ป้าย ไอคอน และแถบซ้ายการ์ด
+- **กันกดซ้ำ** — `AsyncIconButton` ปิดตัวเอง + ขึ้น spinner จนงานจบ
+
 ## 7. งานถัดไปที่เสนอ (รอเจ้าของเคาะ)
-1. **เจ้าของ build + verify บน Windows** (สำคัญสุด — ยังไม่เคยรันจริง) · จุดที่ต้องดู: preview PDF highlight · กด chip แล้วเด้งไปจุดถูก · เปิดไฟล์ตอนที่ไฟล์เปิดค้างอยู่ใน Excel
+1. **License key แบบออฟไลน์** (เคาะแล้ว: ไฟล์ `.lic` ลายเซ็น Ed25519 · ผูกเครื่อง · เก็บสถานะนอก index.db เข้ารหัสด้วย Windows DPAPI · กันหมุนนาฬิกาถอยหลัง) + CLI ออก key สำหรับเจ้าของ
+2. **UX/UI phase**: gradient/shader background · ฟอนต์ไทย bundle · logo + app icon · ขัดรายละเอียดทุกหน้า
+3. **ภาษา (ไทย/อังกฤษ)** — ต้องห่อข้อความทุกจุด (~150 จุด) + เลือกวิธี (ไฟล์ .arb ของ intl หรือ map ง่าย ๆ) ⇒ ควรทำเป็นรอบของตัวเอง
 2. ค้นหลายคำ / ตัวเลือก "ทั้งคำ" / case-sensitive
 3. แปลง number format ของ Excel (วันที่/เงิน) ให้ค้นด้วยข้อความที่เห็นบนจอได้
 4. รองรับ TIS-620 (ต้องเพิ่ม decoder เอง)
