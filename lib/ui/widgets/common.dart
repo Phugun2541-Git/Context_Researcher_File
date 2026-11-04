@@ -252,3 +252,80 @@ class ScanProgressBar extends StatelessWidget {
     );
   }
 }
+
+/// สีประจำชนิดไฟล์ — ใช้ทั้งป้าย ไอคอน และขอบการ์ด เพื่อให้กวาดตาแยกประเภทได้เร็ว
+Color colorOfKind(FileKind kind) => switch (kind) {
+      FileKind.pdf => AppColors.kindPdf,
+      FileKind.xlsx => AppColors.kindExcel,
+      FileKind.docx => AppColors.kindWord,
+      FileKind.text => AppColors.kindText,
+    };
+
+IconData iconOfKind(FileKind kind) => switch (kind) {
+      FileKind.pdf => Icons.picture_as_pdf_outlined,
+      FileKind.xlsx => Icons.table_chart_outlined,
+      FileKind.docx => Icons.article_outlined,
+      FileKind.text => Icons.notes_outlined,
+    };
+
+/// ปุ่มไอคอนที่ยิงงาน async — กดแล้วจะปิดตัวเองและขึ้น spinner จนกว่างานจะจบ
+/// (กันกดรัว ๆ แล้วสั่งเปิดไฟล์/ค้นซ้ำซ้อน)
+class AsyncIconButton extends StatefulWidget {
+  const AsyncIconButton({
+    super.key,
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+    this.color,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final Future<void> Function() onPressed;
+  final Color? color;
+
+  @override
+  State<AsyncIconButton> createState() => _AsyncIconButtonState();
+}
+
+class _AsyncIconButtonState extends State<AsyncIconButton> {
+  bool _busy = false;
+
+  Future<void> _run() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await widget.onPressed();
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final d = D.of(context);
+    return IconButton(
+      tooltip: widget.tooltip,
+      onPressed: _busy ? null : _run,
+      icon: AnimatedSwitcher(
+        duration: Motion.fast,
+        child: _busy
+            ? SizedBox(
+                key: const ValueKey('busy'),
+                width: d.iconSm,
+                height: d.iconSm,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation(AppColors.textMuted),
+                ),
+              )
+            : Icon(
+                widget.icon,
+                key: ValueKey(widget.icon),
+                size: d.iconSm,
+                color: widget.color,
+              ),
+      ),
+    );
+  }
+}

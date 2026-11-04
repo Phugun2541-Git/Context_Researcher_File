@@ -23,7 +23,7 @@ class ResultsList extends StatelessWidget {
         icon: Icons.search_outlined,
         title: 'พิมพ์คำที่จะค้นแล้วกดค้นหา',
         detail: state.mode == SearchMode.project
-            ? 'ค้นจาก index ของโปรเจคนี้ · ไฟล์ที่แก้ใหม่จะถูก index ให้ก่อนค้นอัตโนมัติ'
+            ? 'ไฟล์ที่แก้ใหม่จะถูกอ่านซ้ำให้เองก่อนค้น'
             : 'โหมดนี้อ่านไฟล์สดทุกครั้ง ไม่เก็บ index',
       );
     }
@@ -31,9 +31,7 @@ class ResultsList extends StatelessWidget {
       return EmptyState(
         icon: state.searching ? Icons.hourglass_empty : Icons.sentiment_neutral_outlined,
         title: state.searching ? 'กำลังค้น…' : 'ไม่พบคำนี้ในขอบเขตที่เลือก',
-        detail: state.searching
-            ? null
-            : 'ลองคำที่สั้นลง หรือเพิ่มโฟลเดอร์ในขอบเขตที่ค้น',
+        detail: state.searching ? null : 'ลองคำสั้นลง หรือเพิ่มโฟลเดอร์',
       );
     }
 
@@ -85,6 +83,10 @@ class _FileResultCardState extends State<_FileResultCard> {
   /// จำนวน chip ที่โชว์ก่อนกด "ดูทั้งหมด"
   static const _chipPreviewCount = 8;
 
+  Color _edgeColor(bool selected) => selected
+      ? AppColors.accent
+      : (_hover ? AppColors.textMuted.withValues(alpha: 0.35) : AppColors.border);
+
   @override
   Widget build(BuildContext context) {
     final d = D.of(context);
@@ -112,10 +114,12 @@ class _FileResultCardState extends State<_FileResultCard> {
           decoration: BoxDecoration(
             color: selected ? AppColors.accentSurface : AppColors.surface,
             borderRadius: BorderRadius.circular(d.radiusLg),
-            border: Border.all(
-              color: selected
-                  ? AppColors.accent
-                  : (_hover ? AppColors.textMuted.withValues(alpha: 0.35) : AppColors.border),
+            border: Border(
+              // แถบสีซ้าย = ชนิดไฟล์ กวาดตาแยกประเภทได้โดยไม่ต้องอ่านป้าย
+              left: BorderSide(color: colorOfKind(r.kind), width: 3),
+              top: BorderSide(color: _edgeColor(selected)),
+              right: BorderSide(color: _edgeColor(selected)),
+              bottom: BorderSide(color: _edgeColor(selected)),
             ),
           ),
           child: Column(
@@ -151,18 +155,18 @@ class _FileResultCardState extends State<_FileResultCard> {
                         color: AppColors.accent,
                       ),
                     ),
-                  IconButton(
+                  AsyncIconButton(
                     tooltip: 'เปิดไฟล์ด้วยโปรแกรมของเครื่อง',
+                    icon: Icons.open_in_new,
                     onPressed: () async {
                       final error = await FileOpener.open(r.path);
                       if (error != null) state.setMessage(error);
                     },
-                    icon: Icon(Icons.open_in_new, size: d.iconSm),
                   ),
-                  IconButton(
+                  AsyncIconButton(
                     tooltip: 'เปิดโฟลเดอร์ที่เก็บไฟล์',
+                    icon: Icons.folder_open_outlined,
                     onPressed: () => FileOpener.revealInExplorer(r.path),
-                    icon: Icon(Icons.folder_open_outlined, size: d.iconSm),
                   ),
                 ],
               ),
