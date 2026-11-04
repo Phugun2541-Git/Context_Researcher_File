@@ -9,6 +9,7 @@ import '../../domain/models.dart';
 import '../../services/file_opener.dart';
 import '../widgets/common.dart';
 import 'lines_preview.dart';
+import 'sheet_preview.dart';
 import 'pdf_preview.dart';
 
 /// แผงขวา — preview ไฟล์ที่เลือก + ปุ่มเปิดไฟล์จริง
@@ -66,24 +67,24 @@ class PreviewPane extends StatelessWidget {
                   ),
                   // Excel: เปิดไฟล์จริงแล้วสั่ง cursor ไปจ่อ cell ไม่ได้ → ให้ copy ref ไปวางใน Name Box
                   if (file.kind == FileKind.xlsx)
-                    IconButton(
+                    AsyncIconButton(
                       tooltip: 'คัดลอก ${hit.locator.label} (วางในช่อง Name Box ของ Excel)',
+                      icon: Icons.copy_all_outlined,
                       onPressed: () async {
                         await Clipboard.setData(
                           ClipboardData(text: hit.locator.label),
                         );
                         state.setMessage('คัดลอก ${hit.locator.label} แล้ว');
                       },
-                      icon: Icon(Icons.copy_all_outlined, size: d.iconSm),
                     ),
                 ],
-                IconButton(
+                AsyncIconButton(
                   tooltip: 'เปิดไฟล์ด้วยโปรแกรมของเครื่อง',
+                  icon: Icons.open_in_new,
                   onPressed: () async {
                     final error = await FileOpener.open(file.path);
                     if (error != null) state.setMessage(error);
                   },
-                  icon: Icon(Icons.open_in_new, size: d.iconSm),
                 ),
                 IconButton(
                   tooltip: 'ปิด preview',
@@ -104,6 +105,11 @@ class PreviewPane extends StatelessWidget {
                         path: file.path,
                         query: state.query.trim(),
                         page: hit?.locator.page,
+                      ),
+                    FileKind.xlsx => SheetPreview(
+                        file: scanned,
+                        query: state.query.trim(),
+                        target: hit?.locator,
                       ),
                     _ => LinesPreview(
                         file: scanned,

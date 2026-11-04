@@ -305,3 +305,17 @@ String columnLetter(int index) {
   } while (i >= 0);
   return String.fromCharCodes(buffer);
 }
+
+/// ดึงตัวอักษรคอลัมน์ออกจาก cell ref (B12 -> B)
+String columnOfRef(String ref) =>
+    RegExp(r'^[A-Za-z]+').firstMatch(ref)?.group(0)?.toUpperCase() ?? 'A';
+
+/// ตัวอักษรคอลัมน์ของ cell ref เป็น index 0-based (B12 -> 1)
+int columnIndexOfRef(String ref) {
+  final letters = columnOfRef(ref);
+  var index = 0;
+  for (final code in letters.codeUnits) {
+    index = index * 26 + (code - 64);
+  }
+  return index - 1;
+}
