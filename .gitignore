@@ -25,3 +25,8 @@ desktop.ini
 
 # ภาพ snapshot ที่ golden test สร้าง (ต่างกันเล็กน้อยทุกเครื่อง)
 test/shots/
+
+# ใบอนุญาตและกุญแจ — ห้ามเข้า repo เด็ดขาด
+*.lic
+.crf-keys/
+*ed25519_private*

@@ -26,6 +26,10 @@ dependencies:
   file_picker: ^8.1.4
   provider: ^6.1.2
   intl: ^0.20.3
+  ed25519_edwards: ^0.3.2
+  crypto: ^3.0.8
+  win32: ^5.15.0
+  ffi: ^2.2.0
 
 dev_dependencies:
   flutter_test:
