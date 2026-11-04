@@ -2,16 +2,23 @@ import 'package:flutter/widgets.dart';
 
 /// ค่า animation กลาง — ใช้ที่เดียวทั้งแอปเพื่อให้จังหวะเท่ากัน
 class Motion {
-  static const fast = Duration(milliseconds: 150);
-  static const base = Duration(milliseconds: 240);
-  static const slow = Duration(milliseconds: 420);
+  /// ปิดเอฟเฟกต์ทั้งแอปจากหน้าตั้งค่า (คืน Duration.zero ให้ทุกจุดพร้อมกัน)
+  static bool reduced = false;
+
+  static Duration get fast =>
+      reduced ? Duration.zero : const Duration(milliseconds: 150);
+  static Duration get base =>
+      reduced ? Duration.zero : const Duration(milliseconds: 240);
+  static Duration get slow =>
+      reduced ? Duration.zero : const Duration(milliseconds: 420);
 
   static const curve = Curves.easeOutCubic;
   static const curveIn = Curves.easeInCubic;
 
   /// หน่วงแบบขั้นบันไดสำหรับ list (index ยิ่งมาก ยิ่งเข้าช้า) — cap กันรายการยาวรอนาน
-  static Duration stagger(int index) =>
-      Duration(milliseconds: (index.clamp(0, 12)) * 35);
+  static Duration stagger(int index) => reduced
+      ? Duration.zero
+      : Duration(milliseconds: (index.clamp(0, 12)) * 35);
 }
 
 /// fade + เลื่อนขึ้นเล็กน้อย ใช้ห่อ item ใน list ผลค้นหา

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../ui/projects/projects_screen.dart';
+import 'app_state.dart';
+import 'theme/app_colors.dart';
 import 'theme/app_theme.dart';
 
 class App extends StatelessWidget {
@@ -8,11 +11,21 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Context Researcher',
-      debugShowCheckedModeBanner: false,
-      theme: buildAppTheme(),
-      home: const ProjectsScreen(),
+    final fontScale = context.select<AppState, double>((s) => s.settings.fontScale);
+    // ฟัง themeNotifier เพื่อ rebuild ทั้งแอปตอนสลับธีมโดยไม่ต้องแตะ call site ของสี
+    return ValueListenableBuilder<String>(
+      valueListenable: themeNotifier,
+      builder: (context, themeId, _) => MaterialApp(
+        title: 'Context Researcher',
+        debugShowCheckedModeBanner: false,
+        theme: buildAppTheme(),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: TextScaler.linear(fontScale)),
+          child: child!,
+        ),
+        home: const ProjectsScreen(),
+      ),
     );
   }
 }

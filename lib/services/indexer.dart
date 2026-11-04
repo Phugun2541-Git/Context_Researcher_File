@@ -21,7 +21,7 @@ final Map<FileKind, FileExtractor> kExtractors = {
 
 /// ดึงข้อความของไฟล์ 1 ไฟล์ · pure Dart (xlsx/docx/text) โยนเข้า Isolate แยกกัน UI กระตุก
 /// ส่วน PDF ต้องรันบน main isolate เพราะ PDFium init ไว้ฝั่งนั้น
-Future<ExtractResult> extractFile(ScannedFile file) async {
+Future<ExtractResult> extractFile(ScannedFile file, {int? maxFileSizeBytes}) async {
   final extractor = kExtractors[file.kind];
   if (extractor == null) {
     return const ExtractResult.failed(
@@ -29,10 +29,11 @@ Future<ExtractResult> extractFile(ScannedFile file) async {
       note: 'ยังไม่รองรับชนิดไฟล์นี้',
     );
   }
-  if (file.size > kMaxFileSizeBytes) {
-    return const ExtractResult.failed(
+  final sizeLimit = maxFileSizeBytes ?? kMaxFileSizeBytes;
+  if (file.size > sizeLimit) {
+    return ExtractResult.failed(
       status: FileStatus.tooLarge,
-      note: 'ไฟล์ใหญ่เกิน 64 MB — ข้ามการ index',
+      note: 'ไฟล์ใหญ่เกิน ${sizeLimit ~/ (1024 * 1024)} MB — ข้ามการอ่าน',
     );
   }
   if (extractor.isolateSafe) {
@@ -83,7 +84,10 @@ class Indexer {
           fingerprint.mtimeMs == file.mtimeMs &&
           fingerprint.size == file.size;
       if (!unchanged) {
-        final result = await extractFile(file);
+        final result = await extractFile(
+          file,
+          maxFileSizeBytes: scanner.maxFileSizeBytes,
+        );
         indexRepo.replaceFile(
           projectId: projectId,
           path: file.path,

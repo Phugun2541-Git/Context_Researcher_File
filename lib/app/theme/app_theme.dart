@@ -4,7 +4,9 @@ import 'app_colors.dart';
 
 /// ThemeData กลาง — ดึงค่าจาก AppColors ทั้งหมด
 ThemeData buildAppTheme() {
-  final base = ThemeData.light(useMaterial3: true);
+  final base = isDarkTheme
+      ? ThemeData.dark(useMaterial3: true)
+      : ThemeData.light(useMaterial3: true);
   return base.copyWith(
     scaffoldBackgroundColor: AppColors.scaffoldBg,
     colorScheme: base.colorScheme.copyWith(

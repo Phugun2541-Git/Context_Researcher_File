@@ -106,6 +106,11 @@ class IndexRepository {
         .toList();
   }
 
+  /// ล้าง index ของทุกโปรเจค (ไม่ลบตัวโปรเจคและโฟลเดอร์ที่ผูกไว้)
+  void clearAllIndex() {
+    _c.execute('DELETE FROM source_file');
+  }
+
   int chunkCount(int projectId) => _c.select('''
         SELECT COUNT(*) AS c FROM chunk c
         JOIN source_file f ON f.id = c.file_id

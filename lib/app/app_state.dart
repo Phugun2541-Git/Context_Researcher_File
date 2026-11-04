@@ -7,7 +7,11 @@ import 'package:path/path.dart' as p;
 import '../data/db.dart';
 import '../data/index_repository.dart';
 import '../data/project_repository.dart';
+import '../data/settings_repository.dart';
+import '../domain/app_settings.dart';
 import '../domain/models.dart';
+import 'theme/app_colors.dart';
+import 'theme/motion.dart';
 import '../services/file_scanner.dart';
 import '../services/indexer.dart';
 import '../services/search_service.dart';
@@ -18,16 +22,49 @@ enum SearchMode { project, adHoc }
 class AppState extends ChangeNotifier {
   AppState(AppDb db)
       : projectRepo = ProjectRepository(db),
-        indexRepo = IndexRepository(db) {
-    indexer = Indexer(indexRepo: indexRepo, projectRepo: projectRepo);
-    searchService = SearchService(indexRepo: indexRepo);
+        indexRepo = IndexRepository(db),
+        settingsRepo = SettingsRepository(db) {
+    settings = settingsRepo.load();
+    _applySettingsToApp();
+    _rebuildServices();
     loadProjects();
   }
 
   final ProjectRepository projectRepo;
   final IndexRepository indexRepo;
-  late final Indexer indexer;
-  late final SearchService searchService;
+  final SettingsRepository settingsRepo;
+  late Indexer indexer;
+  late SearchService searchService;
+
+  /// ค่าตั้งค่าจากหน้า "ตั้งค่า"
+  late AppSettings settings;
+
+  void _rebuildServices() {
+    final scanner = FileScanner(
+      allowedKinds: settings.enabledKinds,
+      maxFileSizeBytes: settings.maxFileSizeBytes,
+    );
+    indexer = Indexer(
+      indexRepo: indexRepo,
+      projectRepo: projectRepo,
+      scanner: scanner,
+    );
+    searchService = SearchService(indexRepo: indexRepo, scanner: scanner);
+  }
+
+  void _applySettingsToApp() {
+    applyTheme(settings.themeId);
+    Motion.reduced = settings.reduceMotion;
+  }
+
+  /// อัปเดตค่าตั้งค่า + บันทึกลง DB + ใช้ผลทันที
+  void updateSettings(AppSettings next) {
+    settings = next;
+    settingsRepo.save(next);
+    _applySettingsToApp();
+    _rebuildServices();
+    notifyListeners();
+  }
 
   // ── โปรเจค ──
   List<Project> projects = const [];

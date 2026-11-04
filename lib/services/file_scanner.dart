@@ -26,9 +26,17 @@ const kMaxFileSizeBytes = 64 * 1024 * 1024;
 ///
 /// ต้องมี root อย่างน้อย 1 รายการเสมอ — ระบบไม่มีโหมดค้นทั้งเครื่อง
 class FileScanner {
-  const FileScanner({this.skipHidden = true});
+  const FileScanner({
+    this.skipHidden = true,
+    this.allowedKinds,
+    this.maxFileSizeBytes = kMaxFileSizeBytes,
+  });
 
   final bool skipHidden;
+
+  /// null = ทุกชนิดที่ระบบรองรับ · มีค่า = เฉพาะชนิดที่ผู้ใช้เปิดไว้ในหน้าตั้งค่า
+  final Set<FileKind>? allowedKinds;
+  final int maxFileSizeBytes;
 
   Future<List<ScannedFile>> scan(List<String> roots) async {
     final out = <ScannedFile>[];
@@ -57,6 +65,7 @@ class FileScanner {
   ScannedFile? _toScanned(File file) {
     final kind = FileKind.fromExtension(p.extension(file.path));
     if (kind == null) return null;
+    if (allowedKinds != null && !allowedKinds!.contains(kind)) return null;
     final name = p.basename(file.path);
     if (name.startsWith('~\$')) return null; // ไฟล์ lock ของ Office
     try {

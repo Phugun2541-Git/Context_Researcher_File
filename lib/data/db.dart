@@ -134,6 +134,16 @@ class AppDb {
         db.execute('CREATE INDEX idx_chunk_text ON chunk(text)');
       }
     },
+
+    // step 2 — ค่าตั้งค่าของแอป (ธีม ขนาดตัวอักษร ชนิดไฟล์ที่ค้น ฯลฯ)
+    (db, hasTrigram) {
+      db.execute('''
+        CREATE TABLE app_setting (
+          key   TEXT PRIMARY KEY,
+          value TEXT NOT NULL
+        )
+      ''');
+    },
   ];
 
   static void _migrate(Database db, {required bool hasTrigram}) {

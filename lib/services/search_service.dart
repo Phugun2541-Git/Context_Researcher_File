@@ -50,7 +50,10 @@ class SearchService {
 
     var done = 0;
     for (final file in files) {
-      final extracted = await extractFile(file);
+      final extracted = await extractFile(
+        file,
+        maxFileSizeBytes: scanner.maxFileSizeBytes,
+      );
       final result = matchInChunks(
         path: file.path,
         kind: file.kind,
