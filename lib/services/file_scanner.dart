@@ -22,6 +22,29 @@ class ScannedFile {
 /// ขนาดไฟล์สูงสุดที่ยอม extract (ใหญ่กว่านี้ข้าม + บันทึกเหตุผล)
 const kMaxFileSizeBytes = 64 * 1024 * 1024;
 
+/// โฟลเดอร์ที่ข้ามทั้งกิ่งเสมอ — ของระบบ/แคช/ของเครื่องมือ ไม่ใช่เอกสารของผู้ใช้
+/// (เทียบด้วยชื่อตัวพิมพ์เล็ก)
+const kSkipDirNames = <String>{
+  'appdata',
+  'application data',
+  'windows',
+  'winsxs',
+  'program files',
+  'program files (x86)',
+  'programdata',
+  '\$recycle.bin',
+  'system volume information',
+  'node_modules',
+  '__pycache__',
+  'venv',
+  '.venv',
+  'onedrivetemp',
+  'temp',
+  'tmp',
+  'cache',
+  'caches',
+};
+
 /// เดินโฟลเดอร์/ไฟล์ที่ผู้ใช้ระบุ แล้วคืนเฉพาะไฟล์ชนิดที่รองรับ
 ///
 /// ต้องมี root อย่างน้อย 1 รายการเสมอ — ระบบไม่มีโหมดค้นทั้งเครื่อง
@@ -47,19 +70,39 @@ class FileScanner {
         final f = _toScanned(File(root));
         if (f != null && seen.add(f.path)) out.add(f);
       } else if (type == FileSystemEntityType.directory) {
-        await for (final entity in Directory(root).list(
-          recursive: true,
-          followLinks: false,
-        ).handleError((_) {}, test: (e) => e is FileSystemException)) {
-          if (entity is! File) continue;
-          if (skipHidden && _isHiddenPath(entity.path)) continue;
+        await _walk(Directory(root), out, seen);
+      }
+    }
+    out.sort((a, b) => a.path.compareTo(b.path));
+    return out;
+  }
+
+  /// เดินทีละชั้นเอง (ไม่ใช้ list(recursive: true)) เพื่อ **ตัดทั้งโฟลเดอร์** ที่ไม่ต้องค้น
+  /// ตั้งแต่ก่อนเข้าไปเดิน — ถ้าปล่อยให้เดินเข้า AppData/node_modules แล้วค่อยกรองทีหลัง
+  /// การค้นในโฟลเดอร์ผู้ใช้จะช้าขึ้นหลายเท่าโดยไม่ได้ผลเพิ่มเลย
+  Future<void> _walk(Directory dir, List<ScannedFile> out, Set<String> seen) async {
+    final stack = <Directory>[dir];
+    while (stack.isNotEmpty) {
+      final current = stack.removeLast();
+      final List<FileSystemEntity> entries;
+      try {
+        entries = current.listSync(followLinks: false);
+      } catch (_) {
+        continue; // ไม่มีสิทธิ์อ่าน/โฟลเดอร์หาย → ข้ามทั้งกิ่ง
+      }
+      for (final entity in entries) {
+        final name = p.basename(entity.path);
+        if (entity is Directory) {
+          if (skipHidden && name.startsWith('.') && name.length > 1) continue;
+          if (kSkipDirNames.contains(name.toLowerCase())) continue;
+          stack.add(entity);
+        } else if (entity is File) {
+          if (skipHidden && name.startsWith('.') && name.length > 1) continue;
           final f = _toScanned(entity);
           if (f != null && seen.add(f.path)) out.add(f);
         }
       }
     }
-    out.sort((a, b) => a.path.compareTo(b.path));
-    return out;
   }
 
   ScannedFile? _toScanned(File file) {
@@ -80,7 +123,4 @@ class FileScanner {
       return null;
     }
   }
-
-  bool _isHiddenPath(String path) =>
-      p.split(path).any((seg) => seg.startsWith('.') && seg.length > 1);
 }

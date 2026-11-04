@@ -16,6 +16,7 @@ import 'theme/motion.dart';
 import '../services/file_scanner.dart';
 import '../services/indexer.dart';
 import '../services/search_service.dart';
+import '../services/user_folders.dart';
 
 enum SearchMode { project, adHoc }
 
@@ -183,6 +184,27 @@ class AppState extends ChangeNotifier {
     final id = projectRepo.createProject(name);
     loadProjects();
     return id;
+  }
+
+  /// โปรเจคสำเร็จรูป "ไฟล์ของฉัน" — ผูกโฟลเดอร์เอกสารมาตรฐานให้เลย
+  /// (เคสจำไม่ได้ว่าไฟล์อยู่ไหน) · ถ้ามีอยู่แล้วให้เปิดอันเดิมแทนการสร้างซ้ำ
+  /// คืน false เมื่อหาโฟลเดอร์มาตรฐานในเครื่องไม่เจอเลย
+  bool openOrCreateMyFiles() {
+    final existing = projects.where((p) => p.name == UserFolders.myFilesProjectName).toList();
+    if (existing.isNotEmpty) {
+      openProject(existing.first);
+      return true;
+    }
+    final roots = UserFolders.documentRoots();
+    if (roots.isEmpty) {
+      message = 'หาโฟลเดอร์เอกสารมาตรฐานของเครื่องนี้ไม่เจอ — เลือกโฟลเดอร์เองได้';
+      notifyListeners();
+      return false;
+    }
+    final id = createProject(UserFolders.myFilesProjectName);
+    openProject(projects.firstWhere((p) => p.id == id));
+    addRoots(roots);
+    return true;
   }
 
   void deleteProject(int id) {

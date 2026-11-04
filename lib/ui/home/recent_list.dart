@@ -7,6 +7,7 @@ import '../../app/theme/app_dimens.dart';
 import '../../app/theme/motion.dart';
 import '../../domain/models.dart';
 import '../../services/file_opener.dart';
+import '../../services/user_folders.dart';
 import '../widgets/common.dart';
 
 /// ไฟล์ที่เพิ่งเปิดล่าสุด — แสดงกลางหน้าหลักตอนยังไม่ได้ค้น
@@ -19,17 +20,28 @@ class RecentList extends StatelessWidget {
     final state = context.watch<AppState>();
     final recents = state.recents;
 
+    final hasMyFiles = state.projects.any((p) => p.name == UserFolders.myFilesProjectName);
+
     if (recents.isEmpty) {
-      return const EmptyState(
-        icon: Icons.search_outlined,
-        title: 'พิมพ์คำที่จะค้นแล้วกดค้นหา',
-        detail: 'เลือกโฟลเดอร์ที่จะค้นในแผงซ้ายก่อน · ไฟล์ที่เคยเปิดจะมาโผล่ตรงนี้',
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (!hasMyFiles) const _MyFilesCard(),
+          const Expanded(
+            child: EmptyState(
+              icon: Icons.search_outlined,
+              title: 'พิมพ์คำที่จะค้นแล้วกดค้นหา',
+              detail: 'เลือกโฟลเดอร์ที่จะค้นในแผงซ้ายก่อน · ไฟล์ที่เคยเปิดจะมาโผล่ตรงนี้',
+            ),
+          ),
+        ],
       );
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (!hasMyFiles) const _MyFilesCard(),
         Padding(
           padding: EdgeInsets.only(left: 2, bottom: d.gap),
           child: Row(
@@ -64,6 +76,57 @@ class RecentList extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// ทางลัดสำหรับเคส "จำไม่ได้ว่าไฟล์อยู่ไหน" — ผูกโฟลเดอร์เอกสารมาตรฐานให้ในคลิกเดียว
+class _MyFilesCard extends StatelessWidget {
+  const _MyFilesCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final d = D.of(context);
+    final state = context.read<AppState>();
+    return Container(
+      margin: EdgeInsets.only(bottom: d.gap),
+      padding: EdgeInsets.all(d.gapLg * 0.8),
+      decoration: BoxDecoration(
+        color: AppColors.accentSurface,
+        borderRadius: BorderRadius.circular(d.radiusLg),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.auto_awesome_outlined, size: d.icon, color: AppColors.accent),
+          SizedBox(width: d.gap),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'จำไม่ได้ว่าไฟล์อยู่โฟลเดอร์ไหน?',
+                  style: TextStyle(
+                    fontSize: d.fontBody,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textStrong,
+                  ),
+                ),
+                Text(
+                  'สร้างโปรเจค "${UserFolders.myFilesProjectName}" ที่ผูก Desktop · Documents · '
+                  'Downloads · OneDrive ให้เลย (ครั้งแรกใช้เวลาอ่านไฟล์สักพัก)',
+                  style: TextStyle(fontSize: d.fontSm, color: AppColors.textMuted, height: 1.4),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: d.gap),
+          FilledButton(
+            onPressed: state.openOrCreateMyFiles,
+            child: const Text('สร้างให้'),
+          ),
+        ],
+      ),
     );
   }
 }
