@@ -9,13 +9,13 @@ import '../../app/app_info.dart';
 import '../../app/app_state.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_dimens.dart';
+import '../../app/theme/app_theme.dart';
 import '../../app/theme/motion.dart';
 import '../../data/db.dart';
 import '../../domain/models.dart';
 import '../../services/file_opener.dart';
 import '../../services/license/machine_id.dart';
 import '../license/license_controller.dart';
-import '../widgets/aurora_background.dart';
 import '../widgets/common.dart';
 
 /// หน้าตั้งค่า — ธีม · การแสดงผล · ขอบเขตการค้น · ข้อมูลที่เก็บไว้
@@ -28,34 +28,19 @@ class SettingsScreen extends StatelessWidget {
     final state = context.watch<AppState>();
     final settings = state.settings;
 
-    return Scaffold(
-      body: AuroraBackground(
-        intensity: 0.55,
-        child: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.all(d.pagePad * 0.8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    CircleIconButton(
-                      tooltip: 'กลับ',
-                      icon: Icons.arrow_back,
-                      onPressed: () => Navigator.of(context).maybePop(),
-                    ),
-                    SizedBox(width: d.gap - 4),
-                    Text(
-                      'ตั้งค่า',
-                      style: TextStyle(
-                        fontSize: d.fontTitle,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textStrong,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: d.gapLg),
+    return Padding(
+      padding: EdgeInsets.all(d.pagePad * 0.6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'ตั้งค่า',
+            style: TextStyle(
+              fontSize: d.fontTitle + 2,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textStrong,
+            ),
+          ),
                 Expanded(
                   child: Center(
                     child: ConstrainedBox(
@@ -182,6 +167,12 @@ class SettingsScreen extends StatelessWidget {
                                     DropdownButton<int>(
                                       value: settings.maxFileSizeMb,
                                       underline: const SizedBox.shrink(),
+                                      // ไม่สืบทอด DefaultTextStyle → ระบุฟอนต์เอง
+                                      style: TextStyle(
+                                        fontSize: d.fontBody,
+                                        color: AppColors.textBody,
+                                        fontFamily: kFontFamily,
+                                      ),
                                       items: const [16, 32, 64, 128, 256]
                                           .map(
                                             (mb) =>
@@ -214,10 +205,7 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
+        ],
       ),
     );
   }

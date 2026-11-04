@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import '../data/db.dart';
 import '../data/index_repository.dart';
 import '../data/project_repository.dart';
+import '../data/recent_repository.dart';
 import '../data/settings_repository.dart';
 import '../domain/app_settings.dart';
 import '../domain/models.dart';
@@ -18,21 +19,39 @@ import '../services/search_service.dart';
 
 enum SearchMode { project, adHoc }
 
+/// หน้าที่กำลังเปิดอยู่ใน shell (เมนูซ้าย)
+enum AppPage { home, project, settings }
+
+/// การเรียงผลค้นหา
+enum ResultSort {
+  newest('ล่าสุดก่อน'),
+  oldest('เก่าสุดก่อน'),
+  mostHits('พบมากที่สุด'),
+  name('ชื่อไฟล์ ก-ฮ');
+
+  const ResultSort(this.label);
+
+  final String label;
+}
+
 /// state กลางของแอป — โปรเจค, การ index, การค้นหา, ไฟล์/จุดที่เลือกอยู่
 class AppState extends ChangeNotifier {
   AppState(AppDb db)
       : projectRepo = ProjectRepository(db),
         indexRepo = IndexRepository(db),
-        settingsRepo = SettingsRepository(db) {
+        settingsRepo = SettingsRepository(db),
+        recentRepo = RecentRepository(db) {
     settings = settingsRepo.load();
     _applySettingsToApp();
     _rebuildServices();
     loadProjects();
+    loadRecents();
   }
 
   final ProjectRepository projectRepo;
   final IndexRepository indexRepo;
   final SettingsRepository settingsRepo;
+  final RecentRepository recentRepo;
   late Indexer indexer;
   late SearchService searchService;
 
@@ -66,9 +85,19 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ── หน้าที่เปิดอยู่ + แถบเมนูซ้าย ──
+  AppPage page = AppPage.home;
+  bool navCollapsed = false;
+
   // ── โปรเจค ──
   List<Project> projects = const [];
   Project? currentProject;
+
+  // ── ไฟล์ที่เพิ่งเปิด ──
+  List<RecentFile> recents = const [];
+
+  // ── การเรียงผล ──
+  ResultSort sort = ResultSort.newest;
 
   // ── โหมด/คำค้น ──
   SearchMode mode = SearchMode.project;
@@ -95,6 +124,59 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void loadRecents() {
+    recents = recentRepo.list();
+    notifyListeners();
+  }
+
+  void clearRecents() {
+    recentRepo.clear();
+    loadRecents();
+  }
+
+  // ─────────── หน้า/เมนู ───────────
+
+  void toggleNav() {
+    navCollapsed = !navCollapsed;
+    notifyListeners();
+  }
+
+  /// หน้าหลัก = ค้นด่วนแบบไม่ผูกโปรเจค
+  void goHome() {
+    if (mode != SearchMode.adHoc) startAdHoc();
+    page = AppPage.home;
+    notifyListeners();
+  }
+
+  void goSettings() {
+    page = AppPage.settings;
+    notifyListeners();
+  }
+
+  void setSort(ResultSort value) {
+    sort = value;
+    notifyListeners();
+  }
+
+  /// เรียงเฉพาะตอนแสดง ไม่แตะลำดับที่ service ส่งมา (เปลี่ยนการเรียงไม่ต้องค้นใหม่)
+  List<FileResult> get sortedResults {
+    final list = [...results];
+    switch (sort) {
+      case ResultSort.newest:
+        list.sort((a, b) => b.mtimeMs.compareTo(a.mtimeMs));
+      case ResultSort.oldest:
+        list.sort((a, b) => a.mtimeMs.compareTo(b.mtimeMs));
+      case ResultSort.mostHits:
+        list.sort((a, b) {
+          final byHits = b.totalHits.compareTo(a.totalHits);
+          return byHits != 0 ? byHits : a.fileName.compareTo(b.fileName);
+        });
+      case ResultSort.name:
+        list.sort((a, b) => a.fileName.toLowerCase().compareTo(b.fileName.toLowerCase()));
+    }
+    return list;
+  }
+
   // ─────────── โปรเจค ───────────
 
   int createProject(String name) {
@@ -111,6 +193,7 @@ class AppState extends ChangeNotifier {
 
   void openProject(Project project) {
     currentProject = projectRepo.findProject(project.id) ?? project;
+    page = AppPage.project;
     mode = SearchMode.project;
     results = const [];
     hasSearched = false;
@@ -285,6 +368,8 @@ class AppState extends ChangeNotifier {
   void selectFile(FileResult file, {SearchHit? hit}) {
     selectedFile = file;
     selectedHit = hit ?? (file.hits.isNotEmpty ? file.hits.first : null);
+    recentRepo.touch(path: file.path, kind: file.kind, query: query.trim());
+    recents = recentRepo.list();
     notifyListeners();
   }
 

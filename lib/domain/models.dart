@@ -156,6 +156,7 @@ class FileResult {
     required this.totalHits,
     this.status = FileStatus.ok,
     this.note,
+    this.mtimeMs = 0,
   });
 
   final String path;
@@ -164,6 +165,9 @@ class FileResult {
   final int totalHits;
   final FileStatus status;
   final String? note;
+
+  /// เวลาแก้ไขไฟล์ล่าสุด (0 = ไม่รู้) — ใช้แสดงวันที่และเรียงผล
+  final int mtimeMs;
 
   String get fileName => path.split(RegExp(r'[\\/]')).last;
 }
@@ -183,4 +187,23 @@ class ScanProgress {
   final bool finished;
 
   double get ratio => total == 0 ? 0 : done / total;
+}
+
+/// ไฟล์ที่เพิ่งเปิดล่าสุด (หน้าหลัก)
+class RecentFile {
+  const RecentFile({
+    required this.path,
+    required this.kind,
+    required this.openedAt,
+    this.query,
+  });
+
+  final String path;
+  final FileKind kind;
+  final DateTime openedAt;
+
+  /// คำที่ค้นตอนเปิดไฟล์นี้ — กดแล้วค้นซ้ำได้
+  final String? query;
+
+  String get fileName => path.split(RegExp(r'[\\/]')).last;
 }

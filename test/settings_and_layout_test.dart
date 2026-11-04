@@ -7,9 +7,7 @@ import 'package:context_researcher_file/data/db.dart';
 import 'package:context_researcher_file/data/settings_repository.dart';
 import 'package:context_researcher_file/domain/models.dart';
 import 'package:context_researcher_file/services/file_scanner.dart';
-import 'package:context_researcher_file/ui/projects/projects_screen.dart';
-import 'package:context_researcher_file/ui/search/search_screen.dart';
-import 'package:context_researcher_file/ui/settings/settings_screen.dart';
+import 'package:context_researcher_file/ui/shell/app_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -52,13 +50,44 @@ void main() {
     addTearDown(tester.view.reset);
   }
 
-  testWidgets('หน้าแรกไม่ overflow ที่ขนาดหน้าต่างเล็กสุด (980x640)',
+  testWidgets('หน้าแรก (shell + เมนูซ้าย) ไม่ overflow ที่ขนาดหน้าต่างเล็กสุด (980x640)',
       (tester) async {
     await setWindow(tester, const Size(980, 640));
-    await tester.pumpWidget(wrap(const ProjectsScreen()));
+    await tester.pumpWidget(wrap(const AppShell()));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+    expect(find.text('หน้าหลัก'), findsOneWidget);
     expect(find.text('ยังไม่มีโปรเจค'), findsOneWidget);
+  });
+
+  testWidgets('ย่อเมนูซ้ายแล้วเหลือไอคอน ขยายกลับได้', (tester) async {
+    await setWindow(tester, const Size(1280, 900));
+    await tester.pumpWidget(wrap(const AppShell()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ตั้งค่า'), findsOneWidget);
+    state.toggleNav();
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text('ตั้งค่า'), findsNothing, reason: 'ย่อแล้วเหลือแต่ไอคอน');
+
+    state.toggleNav();
+    await tester.pumpAndSettle();
+    expect(find.text('ตั้งค่า'), findsOneWidget);
+  });
+
+  testWidgets('กดโปรเจคในเมนูซ้ายแล้วเข้าหน้าค้นหาของโปรเจคนั้น', (tester) async {
+    state.createProject('RMA');
+    await setWindow(tester, const Size(1280, 900));
+    await tester.pumpWidget(wrap(const AppShell()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('RMA').first);
+    await tester.pumpAndSettle();
+
+    expect(state.page, AppPage.project);
+    expect(state.currentProject?.name, 'RMA');
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('หน้าค้นหาไม่ overflow ที่ขนาดเล็กสุด และสลับเป็น preview ทับ',
@@ -68,12 +97,12 @@ void main() {
     state.addRoots(['test/fixtures']);
 
     await setWindow(tester, const Size(980, 640));
-    await tester.pumpWidget(wrap(const SearchScreen()));
+    await tester.pumpWidget(wrap(const AppShell()));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
 
     await setWindow(tester, const Size(1920, 1080));
-    await tester.pumpWidget(wrap(const SearchScreen()));
+    await tester.pumpWidget(wrap(const AppShell()));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
@@ -81,7 +110,8 @@ void main() {
   testWidgets('หน้าตั้งค่า: เลือกธีมแล้วสีเปลี่ยนจริงและถูกบันทึกลง DB',
       (tester) async {
     await setWindow(tester, const Size(1280, 900));
-    await tester.pumpWidget(wrap(const SettingsScreen()));
+    state.goSettings();
+    await tester.pumpWidget(wrap(const AppShell()));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
 

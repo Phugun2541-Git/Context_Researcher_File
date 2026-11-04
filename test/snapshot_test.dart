@@ -9,9 +9,7 @@ import 'package:context_researcher_file/app/theme/motion.dart';
 import 'package:context_researcher_file/data/db.dart';
 import 'package:context_researcher_file/services/license/license_service.dart';
 import 'package:context_researcher_file/ui/license/activate_screen.dart';
-import 'package:context_researcher_file/ui/projects/projects_screen.dart';
-import 'package:context_researcher_file/ui/search/search_screen.dart';
-import 'package:context_researcher_file/ui/settings/settings_screen.dart';
+import 'package:context_researcher_file/ui/shell/app_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -62,56 +60,57 @@ void main() {
           ),
         );
 
-    await tester.pumpWidget(wrap(const ProjectsScreen()));
+    await tester.pumpWidget(wrap(const AppShell()));
     await tester.pumpAndSettle();
     await expectLater(
-      find.byType(ProjectsScreen),
-      matchesGoldenFile('shots/projects_empty.png'),
+      find.byType(AppShell),
+      matchesGoldenFile('shots/home_empty.png'),
     );
 
     final id = state.createProject('RMA');
     state.openProject(state.projects.firstWhere((p) => p.id == id));
     state.addRoots(['test/fixtures']);
-    await tester.pumpWidget(wrap(const ProjectsScreen()));
+    await tester.pumpWidget(wrap(const AppShell()));
     await tester.pumpAndSettle();
     await expectLater(
-      find.byType(ProjectsScreen),
-      matchesGoldenFile('shots/projects_list.png'),
+      find.byType(AppShell),
+      matchesGoldenFile('shots/project_search.png'),
     );
 
     state.setQuery('RMA');
     // งานจริง (อ่านไฟล์/Isolate) ต้องรันนอก fake async ของ flutter_test
     await tester.runAsync(() => state.runSearch());
-    await tester.pumpWidget(wrap(const SearchScreen()));
+    await tester.pumpWidget(wrap(const AppShell()));
     await tester.pumpAndSettle();
     await expectLater(
-      find.byType(SearchScreen),
+      find.byType(AppShell),
       matchesGoldenFile('shots/search_results.png'),
     );
 
     if (state.results.isNotEmpty) {
       state.selectFile(state.results.first);
-      await tester.pumpWidget(wrap(const SearchScreen()));
+      await tester.pumpWidget(wrap(const AppShell()));
       await tester.runAsync(() => Future<void>.delayed(const Duration(seconds: 1)));
       await tester.pumpAndSettle();
       await expectLater(
-        find.byType(SearchScreen),
+        find.byType(AppShell),
         matchesGoldenFile('shots/search_preview.png'),
       );
     }
 
-    await tester.pumpWidget(wrap(const SettingsScreen()));
+    state.goSettings();
+    await tester.pumpWidget(wrap(const AppShell()));
     await tester.pumpAndSettle();
     await expectLater(
-      find.byType(SettingsScreen),
+      find.byType(AppShell),
       matchesGoldenFile('shots/settings.png'),
     );
 
     // เลื่อนลงท้ายหน้า เพื่อเห็นบล็อก "เกี่ยวกับ" (เวอร์ชัน + อีเมลติดต่อ)
-    await tester.drag(find.byType(ListView), const Offset(0, -700));
+    await tester.drag(find.byType(ListView).last, const Offset(0, -700));
     await tester.pumpAndSettle();
     await expectLater(
-      find.byType(SettingsScreen),
+      find.byType(AppShell),
       matchesGoldenFile('shots/settings_about.png'),
     );
 

@@ -89,7 +89,7 @@ class IndexRepository {
   /// ไฟล์ที่ index แล้วแต่ไม่มี text (PDF สแกน) — แสดงเตือนในผลค้นหา
   List<FileResult> problemFiles(int projectId) {
     final rows = _c.select('''
-      SELECT path, kind, status, note FROM source_file
+      SELECT path, kind, status, note, mtime_ms FROM source_file
       WHERE project_id = ? AND status <> 'ok'
       ORDER BY path
     ''', [projectId]);
@@ -102,6 +102,7 @@ class IndexRepository {
               status: FileStatus.values
                   .firstWhere((s) => s.name == r['status'] as String),
               note: r['note'] as String?,
+              mtimeMs: r['mtime_ms'] as int? ?? 0,
             ))
         .toList();
   }
@@ -133,7 +134,7 @@ class IndexRepository {
     if (_db.hasTrigram && canUseFts(q)) {
       rows = _c.select('''
         SELECT f.path AS path, f.kind AS kind, f.status AS status, f.note AS note,
-               c.locator AS locator, c.text AS text
+               f.mtime_ms AS mtime_ms, c.locator AS locator, c.text AS text
         FROM chunk_fts
         JOIN chunk c ON c.id = chunk_fts.rowid
         JOIN source_file f ON f.id = c.file_id
@@ -143,7 +144,7 @@ class IndexRepository {
     } else {
       rows = _c.select('''
         SELECT f.path AS path, f.kind AS kind, f.status AS status, f.note AS note,
-               c.locator AS locator, c.text AS text
+               f.mtime_ms AS mtime_ms, c.locator AS locator, c.text AS text
         FROM chunk c
         JOIN source_file f ON f.id = c.file_id
         WHERE f.project_id = ? AND c.text LIKE ? ESCAPE '\\'
@@ -173,6 +174,7 @@ class IndexRepository {
           status: FileStatus.values
               .firstWhere((s) => s.name == (r['status'] as String? ?? 'ok')),
           note: r['note'] as String?,
+          mtimeMs: r['mtime_ms'] as int? ?? 0,
         ),
       );
       final locator = Locator.fromJson(r['locator'] as String);
@@ -195,6 +197,7 @@ class IndexRepository {
               totalHits: e.value.total,
               status: e.value.status,
               note: e.value.note,
+              mtimeMs: e.value.mtimeMs,
             ))
         .toList()
       ..sort((a, b) {
@@ -206,11 +209,12 @@ class IndexRepository {
 }
 
 class _Acc {
-  _Acc({required this.kind, required this.status, this.note});
+  _Acc({required this.kind, required this.status, this.note, this.mtimeMs = 0});
 
   final FileKind kind;
   final FileStatus status;
   final String? note;
+  final int mtimeMs;
   final List<SearchHit> hits = [];
   int total = 0;
 }

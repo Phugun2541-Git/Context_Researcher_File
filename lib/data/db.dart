@@ -144,6 +144,19 @@ class AppDb {
         )
       ''');
     },
+
+    // step 3 — ไฟล์ที่เพิ่งเปิดล่าสุด (แสดงในหน้าหลัก) · เก็บแค่ path ไม่เก็บเนื้อหา
+    (db, hasTrigram) {
+      db.execute('''
+        CREATE TABLE recent_file (
+          path      TEXT PRIMARY KEY,
+          kind      TEXT NOT NULL,
+          query     TEXT,
+          opened_at TEXT NOT NULL
+        )
+      ''');
+      db.execute('CREATE INDEX idx_recent_opened ON recent_file(opened_at DESC)');
+    },
   ];
 
   static void _migrate(Database db, {required bool hasTrigram}) {

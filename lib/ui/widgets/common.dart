@@ -392,3 +392,58 @@ class _AsyncIconButtonState extends State<AsyncIconButton> {
     );
   }
 }
+
+/// ไอคอนชนิดไฟล์ทรงสี่เหลี่ยมมุมมน พื้นสีประจำชนิด ตัวอักษรขาว (X = Excel · W = Word)
+class FileKindTile extends StatelessWidget {
+  const FileKindTile({super.key, required this.kind, this.size});
+
+  final FileKind kind;
+  final double? size;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = D.of(context);
+    final side = size ?? d.icon * 1.7;
+    final color = colorOfKind(kind);
+    final letter = switch (kind) {
+      FileKind.xlsx => 'X',
+      FileKind.docx => 'W',
+      FileKind.pdf => 'P',
+      FileKind.text => 'T',
+    };
+    return Container(
+      width: side,
+      height: side,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(side * 0.28),
+      ),
+      child: Text(
+        letter,
+        style: TextStyle(
+          fontSize: side * 0.52,
+          height: 1.1,
+          fontWeight: FontWeight.w700,
+          color: AppColors.onAccent,
+        ),
+      ),
+    );
+  }
+}
+
+/// วันเวลาแบบสั้นสำหรับการ์ดผลค้นหา — วันนี้/เมื่อวาน แล้วตามด้วยเวลา
+String shortDateLabel(int mtimeMs) {
+  if (mtimeMs <= 0) return '';
+  final t = DateTime.fromMillisecondsSinceEpoch(mtimeMs);
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final that = DateTime(t.year, t.month, t.day);
+  final hhmm =
+      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+  final diff = today.difference(that).inDays;
+  if (diff == 0) return 'วันนี้ $hhmm';
+  if (diff == 1) return 'เมื่อวาน $hhmm';
+  if (that.year == now.year) return '${t.day}/${t.month} $hhmm';
+  return '${t.day}/${t.month}/${t.year}';
+}

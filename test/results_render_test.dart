@@ -4,7 +4,7 @@ import 'package:context_researcher_file/app/app_state.dart';
 import 'package:context_researcher_file/app/theme/app_theme.dart';
 import 'package:context_researcher_file/app/theme/motion.dart';
 import 'package:context_researcher_file/data/db.dart';
-import 'package:context_researcher_file/ui/search/search_screen.dart';
+import 'package:context_researcher_file/ui/shell/app_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -47,7 +47,7 @@ void main() {
           theme: buildAppTheme(),
           home: const MediaQuery(
             data: MediaQueryData(disableAnimations: true),
-            child: SearchScreen(),
+            child: AppShell(),
           ),
         ),
       ),
@@ -55,7 +55,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.text('พบใน 4 ไฟล์'), findsOneWidget);
+    expect(find.textContaining('(4 ไฟล์)'), findsOneWidget);
     expect(find.text('sample.txt'), findsOneWidget);
     expect(find.text('sample.xlsx'), findsOneWidget);
     // chip ตำแหน่งต้องโผล่ (ยืนยันว่าเนื้อในการ์ดถูกวาด ไม่ใช่กล่องเปล่า)

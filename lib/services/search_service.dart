@@ -57,6 +57,7 @@ class SearchService {
       final result = matchInChunks(
         path: file.path,
         kind: file.kind,
+        mtimeMs: file.mtimeMs,
         extracted: extracted,
         query: q,
         hitsPerFile: hitsPerFile,
@@ -89,6 +90,7 @@ FileResult? matchInChunks({
   required ExtractResult extracted,
   required String query,
   int hitsPerFile = 50,
+  int mtimeMs = 0,
 }) {
   if (extracted.status != FileStatus.ok) {
     // ไฟล์สแกน/อ่านไม่ได้ → ยังแสดงเป็นแถวเตือน เพื่อไม่ให้ผู้ใช้เข้าใจว่า "ไม่มีคำนี้"
@@ -99,6 +101,7 @@ FileResult? matchInChunks({
       totalHits: 0,
       status: extracted.status,
       note: extracted.note,
+      mtimeMs: mtimeMs,
     );
   }
 
@@ -124,5 +127,6 @@ FileResult? matchInChunks({
     hits: hits,
     totalHits: total,
     note: extracted.note,
+    mtimeMs: mtimeMs,
   );
 }

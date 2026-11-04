@@ -6,19 +6,24 @@ import '../../app/app_state.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_dimens.dart';
 import '../../app/theme/motion.dart';
+import '../../domain/models.dart';
 import '../widgets/common.dart';
 
-/// แผงซ้าย — ช่องคำค้น · ปุ่มค้นหา · ขอบเขตที่ค้น (โฟลเดอร์/ไฟล์) · สถานะ index
+/// แผงซ้าย — หัวข้อหน้า · ช่องคำค้น · ปุ่มค้นหา · ขอบเขตที่ค้น · ชนิดไฟล์ · สถานะ index
 class SearchPanel extends StatefulWidget {
-  const SearchPanel({super.key});
+  const SearchPanel({super.key, required this.title, this.subtitle});
+
+  final String title;
+  final String? subtitle;
 
   @override
   State<SearchPanel> createState() => _SearchPanelState();
 }
 
 class _SearchPanelState extends State<SearchPanel> {
-  late final TextEditingController _controller =
-      TextEditingController(text: context.read<AppState>().query);
+  late final TextEditingController _controller = TextEditingController(
+    text: context.read<AppState>().query,
+  );
   final _focus = FocusNode();
 
   @override
@@ -36,9 +41,7 @@ class _SearchPanelState extends State<SearchPanel> {
 
   Future<void> _pickFolder() async {
     final state = context.read<AppState>();
-    final dir = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: 'เลือกโฟลเดอร์ที่จะค้น',
-    );
+    final dir = await FilePicker.platform.getDirectoryPath(dialogTitle: 'เลือกโฟลเดอร์ที่จะค้น');
     if (dir != null) state.addRoots([dir]);
   }
 
@@ -58,39 +61,39 @@ class _SearchPanelState extends State<SearchPanel> {
   Widget build(BuildContext context) {
     final d = D.of(context);
     final state = context.watch<AppState>();
-    final isProject = state.mode == SearchMode.project;
+    final isProject = state.mode == SearchMode.project && state.currentProject != null;
+    // คำค้นอาจถูกตั้งจากที่อื่น (กดไฟล์ล่าสุดเพื่อค้นซ้ำ) → ให้ช่องกรอกตามไปด้วย
+    // ทำหลังเฟรมวาดเสร็จ เพราะแก้ controller กลางการ build จะไปสั่ง rebuild ซ้อน
+    if (state.query != _controller.text) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _controller.text != state.query) _controller.text = state.query;
+      });
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── หัวแผง ──
-        Row(
-          children: [
-            CircleIconButton(
-              tooltip: 'กลับหน้าโปรเจค',
-              icon: Icons.arrow_back,
-              onPressed: () => Navigator.of(context).maybePop(),
-            ),
-            SizedBox(width: d.gap - 4),
-            Expanded(
-              child: Text(
-                isProject
-                    ? (state.currentProject?.name ?? 'โปรเจค')
-                    : 'ค้นหาแบบไม่ผูกโปรเจค',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: d.fontTitle,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textStrong,
-                ),
-              ),
-            ),
-          ],
+        Text(
+          widget.title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: d.fontTitle + 2,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textStrong,
+            letterSpacing: -0.3,
+          ),
         ),
+        if (widget.subtitle != null) ...[
+          SizedBox(height: d.gap - 6),
+          Text(
+            widget.subtitle!,
+            style: TextStyle(fontSize: d.fontSm, color: AppColors.textMuted, height: 1.4),
+          ),
+        ],
         SizedBox(height: d.gapLg),
 
-        // ── คำค้น + ปุ่มค้นหา ──
+        // ── คำค้น + ปุ่มค้นวงกลมในช่อง ──
         TextField(
           controller: _controller,
           focusNode: _focus,
@@ -99,7 +102,8 @@ class _SearchPanelState extends State<SearchPanel> {
           decoration: InputDecoration(
             hintText: 'คำหรือประโยคที่จะค้น',
             contentPadding: EdgeInsets.symmetric(horizontal: d.gapLg, vertical: 14),
-            // ปุ่มค้นวงกลมอยู่ในช่องเลย (แนบขอบขวา) จึงต้องกันพื้นที่ให้พอ
+            prefixIcon: Icon(Icons.search, size: d.iconSm, color: AppColors.textMuted),
+            prefixIconConstraints: BoxConstraints(minWidth: d.gapLg * 2, minHeight: d.circleBtn),
             suffixIconConstraints: BoxConstraints(minHeight: d.circleBtn, minWidth: d.circleBtn),
             suffixIcon: Padding(
               padding: const EdgeInsets.only(right: 5),
@@ -137,7 +141,7 @@ class _SearchPanelState extends State<SearchPanel> {
                       valueColor: AlwaysStoppedAnimation(AppColors.onAccent),
                     ),
                   )
-                : Icon(Icons.travel_explore, size: d.iconSm),
+                : Icon(Icons.bolt_outlined, size: d.iconSm),
             label: Text(state.searching || state.indexing ? 'กำลังค้น…' : 'ค้นหา'),
           ),
         ),
@@ -154,17 +158,8 @@ class _SearchPanelState extends State<SearchPanel> {
         SizedBox(height: d.gapLg),
 
         // ── ขอบเขตที่ค้น ──
-        Text(
-          'ขอบเขตที่ค้น',
-          style: TextStyle(
-            fontSize: d.fontSm,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textMuted,
-            letterSpacing: 0.4,
-          ),
-        ),
+        const _SectionLabel(text: 'ขอบเขตที่ค้น'),
         SizedBox(height: d.gap),
-        // ปุ่มคู่นี้อยู่ในแผงแคบ → บีบ padding และให้ป้ายย่อได้ กันล้นตอนย่อหน้าต่าง
         Row(
           children: [
             Expanded(
@@ -175,11 +170,7 @@ class _SearchPanelState extends State<SearchPanel> {
                   visualDensity: VisualDensity.compact,
                 ),
                 icon: Icon(Icons.folder_outlined, size: d.iconSm),
-                label: const Text(
-                  'โฟลเดอร์',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                label: const Text('โฟลเดอร์', maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
             ),
             SizedBox(width: d.gap),
@@ -191,11 +182,7 @@ class _SearchPanelState extends State<SearchPanel> {
                   visualDensity: VisualDensity.compact,
                 ),
                 icon: Icon(Icons.description_outlined, size: d.iconSm),
-                label: const Text(
-                  'ไฟล์',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                label: const Text('ไฟล์', maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
             ),
           ],
@@ -228,7 +215,29 @@ class _SearchPanelState extends State<SearchPanel> {
           ),
         ),
 
-        // ── index / progress / message ──
+        // ── ชนิดไฟล์ที่จะค้น (ค่าเดียวกับหน้าตั้งค่า) ──
+        SizedBox(height: d.gap),
+        const _SectionLabel(text: 'ชนิดไฟล์'),
+        SizedBox(height: d.gap - 4),
+        Wrap(
+          spacing: d.gap - 4,
+          runSpacing: d.gap - 4,
+          children: [
+            for (final kind in FileKind.values)
+              _KindChip(
+                kind: kind,
+                selected: state.settings.enabledKinds.contains(kind),
+                onTap: () {
+                  final next = {...state.settings.enabledKinds};
+                  if (!next.remove(kind)) next.add(kind);
+                  // ต้องเหลืออย่างน้อย 1 ชนิด ไม่งั้นค้นอะไรไม่ได้เลย
+                  if (next.isEmpty) return;
+                  state.updateSettings(state.settings.copyWith(enabledKinds: next));
+                },
+              ),
+          ],
+        ),
+
         if (isProject) ...[
           SizedBox(height: d.gap),
           Text(
@@ -243,14 +252,78 @@ class _SearchPanelState extends State<SearchPanel> {
             label: state.indexing ? 'กำลัง index' : 'กำลังอ่านไฟล์',
           ),
         ],
-        if (state.message != null) ...[
-          SizedBox(height: d.gap),
-          Text(
-            state.message!,
-            style: TextStyle(fontSize: d.fontSm, color: AppColors.danger),
-          ),
-        ],
       ],
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = D.of(context);
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: d.fontSm,
+        fontWeight: FontWeight.w700,
+        color: AppColors.textMuted,
+        letterSpacing: 0.4,
+      ),
+    );
+  }
+}
+
+/// checkbox ชนิดไฟล์แบบ pill — สีตามชนิดไฟล์
+class _KindChip extends StatelessWidget {
+  const _KindChip({required this.kind, required this.selected, required this.onTap});
+
+  final FileKind kind;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = D.of(context);
+    final color = colorOfKind(kind);
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: Motion.fast,
+          padding: EdgeInsets.symmetric(horizontal: d.gap, vertical: 6),
+          decoration: BoxDecoration(
+            color: selected ? color.withValues(alpha: 0.10) : AppColors.surfaceMuted,
+            borderRadius: BorderRadius.circular(d.radiusPill),
+            border: Border.all(
+              color: selected ? color.withValues(alpha: 0.5) : AppColors.border,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                selected ? Icons.check_box : Icons.check_box_outline_blank,
+                size: d.iconSm,
+                color: selected ? color : AppColors.textMuted,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                kind.label,
+                style: TextStyle(
+                  fontSize: d.fontSm,
+                  fontWeight: FontWeight.w600,
+                  color: selected ? AppColors.textStrong : AppColors.textMuted,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -326,10 +399,8 @@ class _RootRow extends StatelessWidget {
           InkWell(
             onTap: () {
               if (state.mode == SearchMode.project) {
-                final matched = state.currentProject?.roots
-                        .where((r) => r.path == path)
-                        .toList() ??
-                    const [];
+                final matched =
+                    state.currentProject?.roots.where((r) => r.path == path).toList() ?? const [];
                 if (matched.isNotEmpty) state.removeRoot(matched.first);
               } else {
                 state.removeAdHocRoot(path);

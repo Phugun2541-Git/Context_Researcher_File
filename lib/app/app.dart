@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../ui/license/activate_screen.dart';
 import '../ui/license/license_gate.dart';
-import '../ui/projects/projects_screen.dart';
+import '../ui/shell/app_shell.dart';
 import 'app_state.dart';
 import 'theme/app_colors.dart';
 import 'theme/app_theme.dart';
@@ -29,7 +29,7 @@ class App extends StatelessWidget {
         home: LicenseGate(
           lockedBuilder: (context, state, activate) =>
               ActivateScreen(state: state, onPick: activate),
-          child: const ProjectsScreen(),
+          child: const AppShell(),
         ),
       ),
     );
