@@ -9,7 +9,6 @@ import '../../app/theme/motion.dart';
 import '../../domain/models.dart';
 import '../search/search_screen.dart';
 import '../settings/settings_screen.dart';
-import '../widgets/app_logo.dart';
 import '../widgets/aurora_background.dart';
 import '../widgets/common.dart';
 import 'project_card.dart';
@@ -32,64 +31,30 @@ class ProjectsScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // แถบบน: ปุ่มทำงานชิดซ้าย · ตั้งค่าอยู่ขวาสุด
                 FadeSlideIn(
-                  child: Wrap(
-                    alignment: WrapAlignment.spaceBetween,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: d.gap,
-                    runSpacing: d.gap,
+                  child: Row(
                     children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AppLogo(size: d.icon * 2.1),
-                          SizedBox(width: d.gap + 2),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Context Researcher',
-                                style: TextStyle(
-                                  fontSize: d.fontDisplay,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textStrong,
-                                  letterSpacing: -0.4,
-                                ),
-                              ),
-                              SizedBox(height: d.gap - 4),
-                              Text(
-                                'ค้นคำในเอกสาร PDF · Excel · Word · CSV/TXT ตามโฟลเดอร์ที่เลือก',
-                                style: TextStyle(fontSize: d.fontBody, color: AppColors.textMuted),
-                              ),
-                            ],
-                          ),
-                        ],
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          state.startAdHoc();
+                          Navigator.of(context).push(_route(const SearchScreen()));
+                        },
+                        icon: Icon(Icons.bolt_outlined, size: d.iconSm),
+                        label: const Text('ค้นแบบไม่ผูกโปรเจค'),
                       ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            tooltip: 'ตั้งค่า',
-                            onPressed: () =>
-                                Navigator.of(context).push(_route(const SettingsScreen())),
-                            icon: Icon(Icons.settings_outlined, size: d.icon),
-                          ),
-                          SizedBox(width: d.gap - 4),
-                          OutlinedButton.icon(
-                            onPressed: () {
-                              state.startAdHoc();
-                              Navigator.of(context).push(_route(const SearchScreen()));
-                            },
-                            icon: Icon(Icons.bolt_outlined, size: d.iconSm),
-                            label: const Text('ค้นแบบไม่ผูกโปรเจค'),
-                          ),
-                          SizedBox(width: d.gap),
-                          FilledButton.icon(
-                            onPressed: () => _createProject(context),
-                            icon: Icon(Icons.add, size: d.iconSm),
-                            label: const Text('โปรเจคใหม่'),
-                          ),
-                        ],
+                      SizedBox(width: d.gap),
+                      FilledButton.icon(
+                        onPressed: () => _createProject(context),
+                        icon: Icon(Icons.add, size: d.iconSm),
+                        label: const Text('โปรเจคใหม่'),
+                      ),
+                      const Spacer(),
+                      CircleIconButton(
+                        tooltip: 'ตั้งค่า',
+                        icon: Icons.settings_outlined,
+                        onPressed: () =>
+                            Navigator.of(context).push(_route(const SettingsScreen())),
                       ),
                     ],
                   ),

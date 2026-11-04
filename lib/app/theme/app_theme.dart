@@ -6,6 +6,9 @@ import 'app_colors.dart';
 /// ฟอนต์หลัก bundle มากับแอป (ไทย+ละติน) — ไม่พึ่งฟอนต์ของเครื่องเพื่อให้หน้าตาเหมือนกันทุกเครื่อง
 const kFontFamily = 'Anuphan';
 
+/// มุมโค้งเต็มใบของ ThemeData (ที่นี่ไม่มี context จึงใช้ค่าคงที่แทน D.radiusPill)
+const kPillRadius = 999.0;
+
 ThemeData buildAppTheme() {
   final base = isDarkTheme
       ? ThemeData.dark(useMaterial3: true)
@@ -27,21 +30,22 @@ ThemeData buildAppTheme() {
     ),
     primaryTextTheme: base.primaryTextTheme.apply(fontFamily: kFontFamily),
     dividerTheme: DividerThemeData(color: AppColors.border, thickness: 1),
+    // ช่องกรอกทรง pill พื้นเทาอ่อนไม่มีขอบ — เห็นขอบเฉพาะตอน focus
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: AppColors.surface,
+      fillColor: AppColors.surfaceMuted,
       hintStyle: TextStyle(color: AppColors.textMuted),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: AppColors.border),
+        borderRadius: BorderRadius.circular(kPillRadius),
+        borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: AppColors.border),
+        borderRadius: BorderRadius.circular(kPillRadius),
+        borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(kPillRadius),
         borderSide: BorderSide(color: AppColors.accent, width: 1.4),
       ),
     ),
@@ -49,16 +53,24 @@ ThemeData buildAppTheme() {
       style: FilledButton.styleFrom(
         backgroundColor: AppColors.accent,
         foregroundColor: AppColors.onAccent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        shape: const StadiumBorder(),
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.textBody,
+        backgroundColor: AppColors.surface,
         side: BorderSide(color: AppColors.border),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        shape: const StadiumBorder(),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: AppColors.textBody,
+        shape: const StadiumBorder(),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
     ),
     tooltipTheme: TooltipThemeData(

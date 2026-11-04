@@ -105,6 +105,14 @@ void main() {
       matchesGoldenFile('shots/settings.png'),
     );
 
+    // เลื่อนลงท้ายหน้า เพื่อเห็นบล็อก "เกี่ยวกับ" (เวอร์ชัน + อีเมลติดต่อ)
+    await tester.drag(find.byType(ListView), const Offset(0, -700));
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byType(SettingsScreen),
+      matchesGoldenFile('shots/settings_about.png'),
+    );
+
     db.dispose();
     tmp.deleteSync(recursive: true);
   });

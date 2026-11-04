@@ -27,6 +27,67 @@ class PanelCard extends StatelessWidget {
   }
 }
 
+/// ปุ่มไอคอนทรงกลมมีขอบบาง — ใช้กับปุ่มเสริมที่หัวหน้าจอ (ย้อนกลับ · ตั้งค่า · ปิด)
+class CircleIconButton extends StatefulWidget {
+  const CircleIconButton({
+    super.key,
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+    this.filled = false,
+    this.color,
+    this.size,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onPressed;
+
+  /// true = พื้น accent ตัวอักษรขาว (ปุ่มหลัก) · false = พื้นขาวขอบบาง
+  final bool filled;
+  final Color? color;
+  final double? size;
+
+  @override
+  State<CircleIconButton> createState() => _CircleIconButtonState();
+}
+
+class _CircleIconButtonState extends State<CircleIconButton> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = D.of(context);
+    final side = widget.size ?? d.circleBtn;
+    final fg = widget.filled ? AppColors.onAccent : (widget.color ?? AppColors.textBody);
+    return Tooltip(
+      message: widget.tooltip,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hover = true),
+        onExit: (_) => setState(() => _hover = false),
+        child: GestureDetector(
+          onTap: widget.onPressed,
+          child: AnimatedContainer(
+            duration: Motion.fast,
+            curve: Motion.curve,
+            width: side,
+            height: side,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: widget.filled
+                  ? AppColors.accent
+                  : (_hover ? AppColors.accentSurface : AppColors.surface),
+              border: widget.filled ? null : Border.all(color: AppColors.border),
+            ),
+            child: Icon(widget.icon, size: d.iconSm, color: fg),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// ข้อความที่ระบายสีคำค้น
 class HighlightedText extends StatelessWidget {
   const HighlightedText({
@@ -143,10 +204,10 @@ class KindBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final d = D.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 2),
       decoration: BoxDecoration(
         color: AppColors.surfaceMuted,
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: BorderRadius.circular(d.radiusPill),
         border: Border.all(color: AppColors.border),
       ),
       child: Text(

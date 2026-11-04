@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/app_info.dart';
@@ -35,10 +36,10 @@ class SettingsScreen extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    IconButton(
+                    CircleIconButton(
                       tooltip: 'กลับ',
+                      icon: Icons.arrow_back,
                       onPressed: () => Navigator.of(context).maybePop(),
-                      icon: Icon(Icons.arrow_back, size: d.icon),
                     ),
                     SizedBox(width: d.gap - 4),
                     Text(
@@ -200,12 +201,9 @@ class SettingsScreen extends StatelessWidget {
                             subtitle: 'index เก็บข้อความของไฟล์ไว้ในเครื่องนี้เท่านั้น',
                             child: _StorageInfo(),
                           ),
-                          _Section(
+                          const _Section(
                             title: 'เกี่ยวกับ',
-                            child: Text(
-                              '$kAppName $kAppVersion',
-                              style: TextStyle(fontSize: d.fontBody, color: AppColors.textMuted),
-                            ),
+                            child: _AboutInfo(),
                           ),
                         ],
                       ),
@@ -396,6 +394,49 @@ class _KindToggle extends StatelessWidget {
   }
 }
 
+/// ชื่อ/เวอร์ชันแอป + อีเมลติดต่อ (กดคัดลอกได้)
+class _AboutInfo extends StatelessWidget {
+  const _AboutInfo();
+
+  @override
+  Widget build(BuildContext context) {
+    final d = D.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$kAppName $kAppVersion',
+          style: TextStyle(fontSize: d.fontBody, color: AppColors.textBody),
+        ),
+        SizedBox(height: d.gap),
+        Row(
+          children: [
+            Icon(Icons.mail_outline, size: d.iconSm, color: AppColors.textMuted),
+            SizedBox(width: d.gap - 2),
+            Expanded(
+              child: SelectableText(
+                kContactEmail,
+                style: TextStyle(fontSize: d.fontBody, color: AppColors.textBody),
+              ),
+            ),
+            AsyncIconButton(
+              tooltip: 'คัดลอกอีเมล',
+              icon: Icons.copy_all_outlined,
+              onPressed: () async {
+                await Clipboard.setData(const ClipboardData(text: kContactEmail));
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('คัดลอกอีเมลแล้ว'), duration: Duration(seconds: 2)),
+                );
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 /// ที่อยู่ไฟล์ index + ขนาด + ปุ่มล้าง
 class _StorageInfo extends StatefulWidget {
   const _StorageInfo();
@@ -420,6 +461,12 @@ class _StorageInfoState extends State<_StorageInfo> {
     } catch (_) {
       setState(() => _size = '-');
     }
+  }
+
+  Future<void> _rebuildIndex() async {
+    final state = context.read<AppState>();
+    await state.indexCurrentProject(force: true);
+    if (mounted) _refreshSize();
   }
 
   Future<void> _clearIndex() async {
@@ -451,6 +498,7 @@ class _StorageInfoState extends State<_StorageInfo> {
   @override
   Widget build(BuildContext context) {
     final d = D.of(context);
+    final state = context.watch<AppState>();
     final path = AppDb.instance.path;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -465,20 +513,33 @@ class _StorageInfoState extends State<_StorageInfo> {
           style: TextStyle(fontSize: d.fontSm, color: AppColors.textMuted),
         ),
         SizedBox(height: d.gapLg * 0.8),
-        Row(
+        Wrap(
+          spacing: d.gap,
+          runSpacing: d.gap,
           children: [
             OutlinedButton.icon(
               onPressed: () => FileOpener.revealInExplorer(path),
               icon: Icon(Icons.folder_open_outlined, size: d.iconSm),
               label: const Text('เปิดโฟลเดอร์'),
             ),
-            SizedBox(width: d.gap),
+            // force reindex — ปกติไม่ต้องใช้ เพราะกดค้นหาแล้วระบบอ่านไฟล์ที่เปลี่ยนให้เอง
+            OutlinedButton.icon(
+              onPressed: state.currentProject == null || state.indexing ? null : _rebuildIndex,
+              icon: Icon(Icons.refresh, size: d.iconSm),
+              label: const Text('อ่านไฟล์ใหม่ทั้งหมด'),
+            ),
             OutlinedButton.icon(
               onPressed: _clearIndex,
               icon: Icon(Icons.delete_sweep_outlined, size: d.iconSm, color: AppColors.danger),
               label: Text('ล้าง index', style: TextStyle(color: AppColors.danger)),
             ),
           ],
+        ),
+        SizedBox(height: d.gap),
+        Text(
+          'ปกติไม่ต้องกด "อ่านไฟล์ใหม่ทั้งหมด" — ทุกครั้งที่ค้น ระบบอ่านเฉพาะไฟล์ที่แก้ใหม่ให้เองอยู่แล้ว '
+          'กดเมื่อผลค้นไม่ตรงกับไฟล์จริง (ใช้ได้เฉพาะตอนเปิดโปรเจคอยู่)',
+          style: TextStyle(fontSize: d.fontSm, color: AppColors.textMuted),
         ),
       ],
     );

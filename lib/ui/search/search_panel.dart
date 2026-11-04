@@ -66,10 +66,10 @@ class _SearchPanelState extends State<SearchPanel> {
         // ── หัวแผง ──
         Row(
           children: [
-            IconButton(
+            CircleIconButton(
               tooltip: 'กลับหน้าโปรเจค',
+              icon: Icons.arrow_back,
               onPressed: () => Navigator.of(context).maybePop(),
-              icon: Icon(Icons.arrow_back, size: d.icon),
             ),
             SizedBox(width: d.gap - 4),
             Expanded(
@@ -98,17 +98,29 @@ class _SearchPanelState extends State<SearchPanel> {
           onSubmitted: (_) => state.canSearch ? state.runSearch() : null,
           decoration: InputDecoration(
             hintText: 'คำหรือประโยคที่จะค้น',
-            prefixIcon: Icon(Icons.search, size: d.icon, color: AppColors.textMuted),
-            suffixIcon: _controller.text.isEmpty
-                ? null
-                : IconButton(
-                    tooltip: 'ล้างคำค้น',
-                    icon: Icon(Icons.close, size: d.iconSm),
-                    onPressed: () {
-                      _controller.clear();
-                      state.setQuery('');
-                    },
-                  ),
+            contentPadding: EdgeInsets.symmetric(horizontal: d.gapLg, vertical: 14),
+            // ปุ่มค้นวงกลมอยู่ในช่องเลย (แนบขอบขวา) จึงต้องกันพื้นที่ให้พอ
+            suffixIconConstraints: BoxConstraints(minHeight: d.circleBtn, minWidth: d.circleBtn),
+            suffixIcon: Padding(
+              padding: const EdgeInsets.only(right: 5),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_controller.text.isNotEmpty)
+                    GestureDetector(
+                      onTap: () {
+                        _controller.clear();
+                        state.setQuery('');
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.only(right: d.gap - 4),
+                        child: Icon(Icons.close, size: d.iconSm, color: AppColors.textMuted),
+                      ),
+                    ),
+                  _SearchCircleButton(busy: state.searching || state.indexing),
+                ],
+              ),
+            ),
           ),
         ),
         SizedBox(height: d.gap),
@@ -223,24 +235,6 @@ class _SearchPanelState extends State<SearchPanel> {
             '${state.currentProject?.fileCount ?? 0} ไฟล์ใน index',
             style: TextStyle(fontSize: d.fontSm, color: AppColors.textMuted),
           ),
-          SizedBox(
-            width: double.infinity,
-            child: TextButton.icon(
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                visualDensity: VisualDensity.compact,
-              ),
-              onPressed: state.indexing
-                  ? null
-                  : () => state.indexCurrentProject(force: true),
-              icon: Icon(Icons.refresh, size: d.iconSm),
-              label: const Text(
-                'สร้าง index ใหม่',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
         ],
         if (state.progress != null) ...[
           SizedBox(height: d.gap),
@@ -261,6 +255,44 @@ class _SearchPanelState extends State<SearchPanel> {
   }
 }
 
+/// ปุ่มค้นวงกลมที่ฝังอยู่ในช่องคำค้น — ปิดตัวเองตอนยังค้นไม่ได้ และขึ้น spinner ระหว่างค้น
+class _SearchCircleButton extends StatelessWidget {
+  const _SearchCircleButton({required this.busy});
+
+  final bool busy;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = D.of(context);
+    final state = context.watch<AppState>();
+    final enabled = state.canSearch;
+    final side = d.circleBtn * 0.82;
+    return GestureDetector(
+      onTap: enabled ? state.runSearch : null,
+      child: MouseRegion(
+        cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+        child: Container(
+          width: side,
+          height: side,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: enabled || busy ? AppColors.accent : AppColors.border,
+          ),
+          child: busy
+              ? Padding(
+                  padding: EdgeInsets.all(side * 0.27),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation(AppColors.onAccent),
+                  ),
+                )
+              : Icon(Icons.search, size: d.iconSm, color: AppColors.onAccent),
+        ),
+      ),
+    );
+  }
+}
+
 class _RootRow extends StatelessWidget {
   const _RootRow({required this.path});
 
@@ -275,7 +307,7 @@ class _RootRow extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: d.gap, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.surfaceMuted,
-        borderRadius: BorderRadius.circular(d.radius),
+        borderRadius: BorderRadius.circular(d.radiusPill),
         border: Border.all(color: AppColors.border),
       ),
       child: Row(
