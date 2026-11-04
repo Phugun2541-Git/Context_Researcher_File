@@ -3,4 +3,4 @@
 /// ★ เจ้าของต้องรัน `dart run tool/keygen.dart` บนเครื่องตัวเอง แล้วเอาค่าที่ได้มาวางที่นี่
 /// private key ห้ามเข้า repo เด็ดขาด (ใครได้ไปจะออกใบอนุญาตเองได้)
 /// ค่าว่าง = แอปถือว่ายังตั้งค่าไม่เสร็จ และจะไม่ยอมรับใบอนุญาตใด ๆ
-const kLicensePublicKeyBase64 = '';
+const kLicensePublicKeyBase64 = '057LovwzNbJqd9yI2JS9Va0OP7sAnY1MZzwUZEVIjko=';
