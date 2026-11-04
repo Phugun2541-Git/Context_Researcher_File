@@ -308,7 +308,7 @@ class _AboutFooter extends StatelessWidget {
     if (collapsed) {
       return Tooltip(
         message:
-            '$kAppName $kAppVersion\n$kContactEmail${licenseLine == null ? '' : '\n$licenseLine'}',
+            'App version $kAppVersion\n$kContactEmail${licenseLine == null ? '' : '\n$licenseLine'}',
         child: Icon(Icons.info_outline, size: d.icon, color: AppColors.textMuted),
       );
     }
@@ -317,33 +317,51 @@ class _AboutFooter extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '$kAppName $kAppVersion',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: d.fontSm,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textBody,
-            ),
+          const _FooterLine(
+            icon: Icons.verified_outlined,
+            text: 'App version $kAppVersion',
+            strong: true,
           ),
-          const SizedBox(height: 2),
-          SelectableText(
-            kContactEmail,
-            maxLines: 1,
-            style: TextStyle(fontSize: d.fontSm - 1, color: AppColors.textMuted),
-          ),
+          const SizedBox(height: 3),
+          const _FooterLine(icon: Icons.mail_outline, text: kContactEmail),
           if (licenseLine != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              licenseLine,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: d.fontSm - 1, color: AppColors.textMuted),
-            ),
+            const SizedBox(height: 3),
+            _FooterLine(icon: Icons.vpn_key_outlined, text: licenseLine),
           ],
         ],
       ),
+    );
+  }
+}
+
+/// 1 บรรทัดท้ายแถบเมนู — ไอคอนนำหน้าเสมอเพื่อให้กวาดตาแยกออกว่าเป็นข้อมูลอะไร
+class _FooterLine extends StatelessWidget {
+  const _FooterLine({required this.icon, required this.text, this.strong = false});
+
+  final IconData icon;
+  final String text;
+  final bool strong;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = D.of(context);
+    return Row(
+      children: [
+        Icon(icon, size: d.iconSm - 2, color: AppColors.textMuted),
+        SizedBox(width: d.gap - 4),
+        Expanded(
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: d.fontSm - 1,
+              fontWeight: strong ? FontWeight.w600 : FontWeight.w400,
+              color: strong ? AppColors.textBody : AppColors.textMuted,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

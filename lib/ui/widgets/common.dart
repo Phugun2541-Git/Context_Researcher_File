@@ -393,7 +393,8 @@ class _AsyncIconButtonState extends State<AsyncIconButton> {
   }
 }
 
-/// ไอคอนชนิดไฟล์ทรงสี่เหลี่ยมมุมมน พื้นสีประจำชนิด ตัวอักษรขาว (X = Excel · W = Word)
+/// ไอคอนชนิดไฟล์ทรงสี่เหลี่ยมมุมมน พื้นสีแบรนด์ของชนิดนั้น ตัวอักษรขาว
+/// (X = Excel · W = Word · P = PDF · T = Text) — ทรง/สี/สัดส่วนอิงภาพ reference
 class FileKindTile extends StatelessWidget {
   const FileKindTile({super.key, required this.kind, this.size});
 
@@ -403,7 +404,7 @@ class FileKindTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final d = D.of(context);
-    final side = size ?? d.icon * 1.7;
+    final side = size ?? d.icon * 1.8;
     final color = colorOfKind(kind);
     final letter = switch (kind) {
       FileKind.xlsx => 'X',
@@ -417,14 +418,14 @@ class FileKindTile extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(side * 0.28),
+        borderRadius: BorderRadius.circular(side * 0.22),
       ),
       child: Text(
         letter,
         style: TextStyle(
-          fontSize: side * 0.52,
+          fontSize: side * 0.5,
           height: 1.1,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w800,
           color: AppColors.onAccent,
         ),
       ),

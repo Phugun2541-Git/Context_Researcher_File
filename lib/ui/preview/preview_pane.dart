@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../../app/app_state.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_dimens.dart';
-import '../../app/theme/motion.dart';
 import '../../domain/models.dart';
 import '../../services/file_opener.dart';
 import '../widgets/common.dart';
@@ -13,7 +12,8 @@ import 'lines_preview.dart';
 import 'pdf_preview.dart';
 import 'sheet_preview.dart';
 
-/// แผงขวา — หัวไฟล์ + 2 แท็บ: เนื้อไฟล์ (preview) กับ รายการจุดที่พบทั้งหมด
+/// แผงขวา — หัวไฟล์ + เนื้อไฟล์ที่เลื่อนไปจุดที่พบให้
+/// (ไม่มีแท็บรายการจุดที่พบ เพราะ chip ในการ์ดผลบอกจุดที่พบอยู่แล้ว)
 class PreviewPane extends StatefulWidget {
   const PreviewPane({super.key});
 
@@ -22,8 +22,6 @@ class PreviewPane extends StatefulWidget {
 }
 
 class _PreviewPaneState extends State<PreviewPane> {
-  bool _showMatches = false;
-
   @override
   Widget build(BuildContext context) {
     final d = D.of(context);
@@ -108,39 +106,8 @@ class _PreviewPaneState extends State<PreviewPane> {
             ),
           ),
 
-          // ── แท็บ ──
-          Container(
-            decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: AppColors.border)),
-            ),
-            padding: EdgeInsets.symmetric(horizontal: d.gapLg * 0.7),
-            child: Row(
-              children: [
-                _Tab(
-                  label: 'เนื้อไฟล์',
-                  selected: !_showMatches,
-                  onTap: () => setState(() => _showMatches = false),
-                ),
-                SizedBox(width: d.gapLg),
-                _Tab(
-                  label: 'จุดที่พบ (${file.totalHits})',
-                  selected: _showMatches,
-                  onTap: () => setState(() => _showMatches = true),
-                ),
-              ],
-            ),
-          ),
-
           Expanded(
-            child: _showMatches
-                ? _MatchesTab(
-                    file: file,
-                    onPick: (picked) {
-                      state.selectHit(file, picked);
-                      setState(() => _showMatches = false);
-                    },
-                  )
-                : scanned == null
+            child: scanned == null
                 ? const EmptyState(icon: Icons.error_outline, title: 'ไม่พบไฟล์นี้ในเครื่องแล้ว')
                 : switch (file.kind) {
                     FileKind.pdf => PdfPreview(
@@ -162,106 +129,6 @@ class _PreviewPaneState extends State<PreviewPane> {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// แท็บแบบขีดเส้นใต้
-class _Tab extends StatelessWidget {
-  const _Tab({required this.label, required this.selected, required this.onTap});
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final d = D.of(context);
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: Motion.fast,
-          padding: EdgeInsets.symmetric(vertical: d.gap),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: selected ? AppColors.accent : Colors.transparent,
-                width: 2,
-              ),
-            ),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: d.fontSm,
-              fontWeight: FontWeight.w700,
-              color: selected ? AppColors.accent : AppColors.textMuted,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// รายการจุดที่พบทั้งหมดในไฟล์นี้ — กดแล้วกระโดดไปจุดนั้นในแท็บเนื้อไฟล์
-class _MatchesTab extends StatelessWidget {
-  const _MatchesTab({required this.file, required this.onPick});
-
-  final FileResult file;
-  final void Function(SearchHit hit) onPick;
-
-  @override
-  Widget build(BuildContext context) {
-    final d = D.of(context);
-    final state = context.watch<AppState>();
-    if (file.hits.isEmpty) {
-      return const EmptyState(icon: Icons.search_off_outlined, title: 'ไม่มีจุดที่พบในไฟล์นี้');
-    }
-    return ListView.separated(
-      padding: EdgeInsets.all(d.gapLg * 0.7),
-      itemCount: file.hits.length,
-      separatorBuilder: (_, __) => SizedBox(height: d.gap - 4),
-      itemBuilder: (context, i) {
-        final hit = file.hits[i];
-        final selected = state.selectedHit == hit;
-        return MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            onTap: () => onPick(hit),
-            child: Container(
-              padding: EdgeInsets.all(d.gap),
-              decoration: BoxDecoration(
-                color: selected ? AppColors.accentSurface : AppColors.surfaceMuted,
-                borderRadius: BorderRadius.circular(d.radius),
-                border: Border.all(color: selected ? AppColors.accent : AppColors.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    hit.locator.label,
-                    style: TextStyle(
-                      fontSize: d.fontSm,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.accent,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  HighlightedText(
-                    text: hit.snippet,
-                    start: hit.matchStart,
-                    length: hit.matchLength,
-                    fontSize: d.fontSm,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }

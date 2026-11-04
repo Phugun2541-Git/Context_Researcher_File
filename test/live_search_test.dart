@@ -1,3 +1,4 @@
+import 'package:context_researcher_file/app/app_state.dart';
 import 'package:context_researcher_file/data/db.dart';
 import 'package:context_researcher_file/data/index_repository.dart';
 import 'package:context_researcher_file/domain/models.dart';
@@ -85,5 +86,29 @@ void main() {
       await service.searchLive(roots: const [], query: 'RMA').toList(),
       isEmpty,
     );
+  });
+
+  test('ติ๊กชนิดไฟล์ออกระหว่างมีผลค้นอยู่ = ค้นใหม่ทันที ผลหายตามตัวกรอง', () async {
+    final tmp = Directory.systemTemp.createTempSync('crf_kind');
+    addTearDown(() => tmp.deleteSync(recursive: true));
+    final db = await AppDb.open(overridePath: '${tmp.path}/index.db');
+    addTearDown(db.dispose);
+    final state = AppState(db);
+    state.startAdHoc();
+    state.addRoots(['test/fixtures']);
+    state.setQuery('RMA');
+    await state.runSearch();
+
+    expect(state.results.any((r) => r.kind == FileKind.xlsx), isTrue);
+
+    state.toggleKind(FileKind.xlsx);
+    // runSearch ถูกยิงจาก toggleKind — รอให้ scan สดเดินจบ
+    while (state.searching) {
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+    }
+
+    expect(state.settings.enabledKinds.contains(FileKind.xlsx), isFalse);
+    expect(state.results.any((r) => r.kind == FileKind.xlsx), isFalse);
+    expect(state.results, isNotEmpty, reason: 'ชนิดอื่นต้องยังอยู่');
   });
 }

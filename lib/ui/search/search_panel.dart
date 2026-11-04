@@ -61,7 +61,6 @@ class _SearchPanelState extends State<SearchPanel> {
   Widget build(BuildContext context) {
     final d = D.of(context);
     final state = context.watch<AppState>();
-    final isProject = state.mode == SearchMode.project && state.currentProject != null;
     // คำค้นอาจถูกตั้งจากที่อื่น (กดไฟล์ล่าสุดเพื่อค้นซ้ำ) → ให้ช่องกรอกตามไปด้วย
     // ทำหลังเฟรมวาดเสร็จ เพราะแก้ controller กลางการ build จะไปสั่ง rebuild ซ้อน
     if (state.query != _controller.text) {
@@ -217,7 +216,7 @@ class _SearchPanelState extends State<SearchPanel> {
 
         // ── ชนิดไฟล์ที่จะค้น (ค่าเดียวกับหน้าตั้งค่า) ──
         SizedBox(height: d.gap),
-        const _SectionLabel(text: 'ชนิดไฟล์'),
+        const _SectionLabel(text: 'ชนิดไฟล์ที่ค้นหา'),
         SizedBox(height: d.gap - 4),
         Wrap(
           spacing: d.gap - 4,
@@ -227,24 +226,11 @@ class _SearchPanelState extends State<SearchPanel> {
               _KindChip(
                 kind: kind,
                 selected: state.settings.enabledKinds.contains(kind),
-                onTap: () {
-                  final next = {...state.settings.enabledKinds};
-                  if (!next.remove(kind)) next.add(kind);
-                  // ต้องเหลืออย่างน้อย 1 ชนิด ไม่งั้นค้นอะไรไม่ได้เลย
-                  if (next.isEmpty) return;
-                  state.updateSettings(state.settings.copyWith(enabledKinds: next));
-                },
+                onTap: () => state.toggleKind(kind),
               ),
           ],
         ),
 
-        if (isProject) ...[
-          SizedBox(height: d.gap),
-          Text(
-            '${state.currentProject?.fileCount ?? 0} ไฟล์ใน index',
-            style: TextStyle(fontSize: d.fontSm, color: AppColors.textMuted),
-          ),
-        ],
         if (state.progress != null) ...[
           SizedBox(height: d.gap),
           ScanProgressBar(

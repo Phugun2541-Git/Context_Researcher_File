@@ -61,9 +61,9 @@ const paletteIndigo = AppPalette(
   success: Color(0xFF2E9E6B),
   warning: Color(0xFFC98A14),
   danger: Color(0xFFD2503F),
-  kindPdf: Color(0xFFC63B32),
-  kindExcel: Color(0xFF1B7A4B),
-  kindWord: Color(0xFF2B5FB8),
+  kindPdf: Color(0xFFD03A2B),
+  kindExcel: Color(0xFF107C41),
+  kindWord: Color(0xFF2B579A),
   kindText: Color(0xFF6B7280),
 );
 
@@ -83,10 +83,10 @@ const paletteViolet = AppPalette(
   success: Color(0xFF2F9E70),
   warning: Color(0xFFC2851B),
   danger: Color(0xFFCF4A54),
-  kindPdf: Color(0xFFC33B4D),
-  kindExcel: Color(0xFF2A7A58),
-  kindWord: Color(0xFF5B52C8),
-  kindText: Color(0xFF7A7490),
+  kindPdf: Color(0xFFD03A2B),
+  kindExcel: Color(0xFF107C41),
+  kindWord: Color(0xFF2B579A),
+  kindText: Color(0xFF6B7280),
 );
 
 /// เขียวมรกต-teal (สะอาดตา เหมาะอ่านนาน)
@@ -105,10 +105,10 @@ const paletteTeal = AppPalette(
   success: Color(0xFF2B8F62),
   warning: Color(0xFFBF8217),
   danger: Color(0xFFC94B3C),
-  kindPdf: Color(0xFFC0453A),
-  kindExcel: Color(0xFF17704C),
-  kindWord: Color(0xFF2F62A8),
-  kindText: Color(0xFF6E807B),
+  kindPdf: Color(0xFFD03A2B),
+  kindExcel: Color(0xFF107C41),
+  kindWord: Color(0xFF2B579A),
+  kindText: Color(0xFF6B7280),
 );
 
 /// ส้ม-อำพัน (เข้าชุดกับระบบ RMA POS)
@@ -127,10 +127,10 @@ const paletteAmber = AppPalette(
   success: Color(0xFF2F8F5F),
   warning: Color(0xFFBF7E12),
   danger: Color(0xFFC6452F),
-  kindPdf: Color(0xFFC03A2E),
-  kindExcel: Color(0xFF1F7049),
-  kindWord: Color(0xFF2C5EA6),
-  kindText: Color(0xFF8A7B68),
+  kindPdf: Color(0xFFD03A2B),
+  kindExcel: Color(0xFF107C41),
+  kindWord: Color(0xFF2B579A),
+  kindText: Color(0xFF6B7280),
 );
 
 /// โหมดมืด — พื้นกรมเทา + accent indigo สว่าง
@@ -149,9 +149,9 @@ const paletteDark = AppPalette(
   success: Color(0xFF45B183),
   warning: Color(0xFFD7A33C),
   danger: Color(0xFFE2695A),
-  kindPdf: Color(0xFFE2756A),
-  kindExcel: Color(0xFF5CBF92),
-  kindWord: Color(0xFF7CA6F0),
+  kindPdf: Color(0xFFE2574A),
+  kindExcel: Color(0xFF21A366),
+  kindWord: Color(0xFF4B8DDE),
   kindText: Color(0xFF9AA3B5),
 );
 

@@ -172,14 +172,11 @@ class _ResultCardState extends State<_ResultCard> {
             ),
           ),
           child: ClipRRect(
-            // แถบสีชนิดไฟล์เป็นลูกที่ clip ตามมุมการ์ด — ห้ามทำเป็น Border สีไม่เท่ากันทุกด้าน
-            // เพราะคู่กับ borderRadius แล้ว Flutter assert ตอน paint และวาดลูกไม่ออกทั้งใบ
             borderRadius: BorderRadius.circular(d.radiusLg - 1),
             child: IntrinsicHeight(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Container(width: 4, color: colorOfKind(file.kind)),
                   Expanded(
                     child: Padding(
                       padding: EdgeInsets.all(d.gap + 2),

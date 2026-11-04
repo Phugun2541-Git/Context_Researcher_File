@@ -314,6 +314,20 @@ class AppState extends ChangeNotifier {
     return completer.future;
   }
 
+  /// เปิด/ปิดชนิดไฟล์ที่จะค้น · ถ้ากำลังมีผลค้นอยู่ให้ค้นใหม่ทันที
+  /// ไม่งั้นผลบนจอจะไม่ตรงกับตัวกรองที่เพิ่งเปลี่ยน
+  void toggleKind(FileKind kind) {
+    final next = {...settings.enabledKinds};
+    if (!next.remove(kind)) next.add(kind);
+    // ต้องเหลืออย่างน้อย 1 ชนิด ไม่งั้นค้นอะไรไม่ได้เลย
+    if (next.isEmpty) return;
+    updateSettings(settings.copyWith(enabledKinds: next));
+    if (hasSearched && query.trim().isNotEmpty && activeRoots.isNotEmpty) {
+      // โหมดโปรเจค: ไฟล์ชนิดที่เพิ่งเปิดอาจยังไม่เคย index มาก่อน จึงต้อง index ซ้ำด้วย
+      runSearch();
+    }
+  }
+
   // ─────────── ค้นหา ───────────
 
   void setQuery(String value) {
