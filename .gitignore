@@ -6,7 +6,10 @@ build/
 .flutter-plugins-dependencies
 *.iml
 .idea/
-.vscode/
+
+# VS Code: เก็บแค่ settings ที่ผูก FVM เข้า repo ส่วนที่เหลือเป็นของแต่ละเครื่อง
+.vscode/*
+!.vscode/settings.json
 
 # FVM
 .fvm/flutter_sdk
