@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../ui/license/activate_screen.dart';
+import '../ui/license/license_gate.dart';
 import '../ui/projects/projects_screen.dart';
 import 'app_state.dart';
 import 'theme/app_colors.dart';
@@ -24,7 +26,11 @@ class App extends StatelessWidget {
               .copyWith(textScaler: TextScaler.linear(fontScale)),
           child: child!,
         ),
-        home: const ProjectsScreen(),
+        home: LicenseGate(
+          lockedBuilder: (context, state, activate) =>
+              ActivateScreen(state: state, onPick: activate),
+          child: const ProjectsScreen(),
+        ),
       ),
     );
   }

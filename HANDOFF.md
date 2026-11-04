@@ -1,6 +1,6 @@
 # HANDOFF — Context Researcher File
 
-> อัปเดตล่าสุด: 2026-11-04 · จบรอบ 3 (UX phase) · **session ถัดไปเริ่มที่ §8 งาน license**
+> อัปเดตล่าสุด: 2026-11-04 · จบรอบ 4 (component ใหม่ + license) · **ถัดไป: เจ้าของรัน keygen แล้ว verify บน Windows ตาม docs/APP_TEST.md ข้อ 54-66**
 > กฎ = `CLAUDE.md` · วิธีทำงาน = `SKILL.md`
 
 ## 0. ผลเทสรอบ 1 บนแอปจริง (เจ้าของรัน)
@@ -161,9 +161,7 @@ lib/
 2. **ข้อความ snippet ได้ฟอนต์คนละตัวกับทั้งแอป** — `RichText` ไม่สืบทอด `DefaultTextStyle` · เปลี่ยนไปใช้ `Text.rich`
 
 ## 7. งานถัดไปที่เสนอ (รอเจ้าของเคาะ)
-1. **License key แบบออฟไลน์** (เคาะแล้ว: ไฟล์ `.lic` ลายเซ็น Ed25519 · ผูกเครื่อง · เก็บสถานะนอก index.db เข้ารหัสด้วย Windows DPAPI · กันหมุนนาฬิกาถอยหลัง) + CLI ออก key สำหรับเจ้าของ
-2. **UX/UI phase**: gradient/shader background · ฟอนต์ไทย bundle · logo + app icon · ขัดรายละเอียดทุกหน้า
-3. **ภาษา (ไทย/อังกฤษ)** — ต้องห่อข้อความทุกจุด (~150 จุด) + เลือกวิธี (ไฟล์ .arb ของ intl หรือ map ง่าย ๆ) ⇒ ควรทำเป็นรอบของตัวเอง
+1. **ภาษา (ไทย/อังกฤษ)** — ต้องห่อข้อความทุกจุด (~150 จุด) + เลือกวิธี (ไฟล์ .arb ของ intl หรือ map ง่าย ๆ) ⇒ ควรทำเป็นรอบของตัวเอง
 2. ค้นหลายคำ / ตัวเลือก "ทั้งคำ" / case-sensitive
 3. แปลง number format ของ Excel (วันที่/เงิน) ให้ค้นด้วยข้อความที่เห็นบนจอได้
 4. รองรับ TIS-620 (ต้องเพิ่ม decoder เอง)
@@ -173,40 +171,40 @@ lib/
 
 ---
 
-## 8. 🔜 งานถัดไป — License key แบบออฟไลน์ (ยังไม่เริ่มเขียนโค้ด)
+## 8. ✅ License key แบบออฟไลน์ (เขียนแล้วรอบ 4 — รอเจ้าของ verify บน Windows)
 
-### ที่เจ้าของเคาะแล้ว (ห้ามเปลี่ยนเองโดยไม่ถาม)
+### ที่เคาะไว้ทั้งหมด
 | หัวข้อ | ที่เคาะ |
 |---|---|
-| รูปแบบ key | **ไฟล์ `.lic`** ที่ลูกค้ากดเลือก (ไม่ใช่พิมพ์ key สั้น) |
-| วิธีกันปลอม | **ลายเซ็น Ed25519** — private key อยู่กับเจ้าของเท่านั้น (ห้ามเข้า repo) · ฝังเฉพาะ public key ในแอป ⇒ แกะ exe ก็ออก key เองไม่ได้ |
-| ผูกเครื่อง | **1 key ต่อ 1 เครื่อง** — fingerprint จาก MachineGuid (registry) + volume serial ของไดรฟ์ระบบ |
-| ที่เก็บสถานะ | **ไม่เก็บใน `index.db`** (เปิดแก้ได้ด้วย DB Browser) → ไฟล์แยกใน `%APPDATA%` เข้ารหัสด้วย **Windows DPAPI** (ผูกกับ user account) |
-| กันหมุนนาฬิกา | เก็บ `lastSeenUtc` ทุกครั้งที่เปิดแอป · เวลาปัจจุบันย้อนหลังกว่าเดิมเกิน 1 ชม. = ถือว่าโกง ล็อกทันที |
-| อายุ | ระบุจำนวนวันใน key (เช่น 30) นับจากวันที่ issue · **ต้องรองรับ key ไม่มีวันหมดอายุด้วย** (เจ้าของสั่งเพิ่มรอบ 4) — เสนอ `days: 0` / `expiresAt: null` = perpetual |
+| รูปแบบ key | ไฟล์ `.lic` (JSON: `payload` base64url + `sig`) ที่ลูกค้ากดเลือก |
+| วิธีกันปลอม | ลายเซ็น Ed25519 · ฝังเฉพาะ public key ในแอป · เซ็นครอบ **ไบต์ของ payload ตรง ๆ** ไม่ใช่ json ที่ประกอบใหม่ |
+| ผูกเครื่อง | 1 key ต่อ 1 เครื่อง — sha256(MachineGuid + volume serial ไดรฟ์ระบบ) ตัด 32 ตัว |
+| ที่เก็บสถานะ | `%APPDATA%/com.alpha98/context_researcher_file/license.bin` เข้ารหัส DPAPI + entropy (ไม่อยู่ใน `index.db` ⇒ ไม่มี migration) |
+| กันหมุนนาฬิกา | เทียบ `lastSeenUtc` ทุกครั้งที่เปิด · ย้อนเกิน 1 ชม. = ล็อก · **ตั้งเวลากลับถูกแล้วใช้ได้ต่อ ไม่แบนถาวร** · ใบตลอดชีพไม่เช็ค |
+| อายุ | `days` นับจาก `iat` · **`days = 0` = ไม่มีวันหมดอายุ** |
+| ยังไม่ activate / หมดอายุ | ล็อกทั้งแอป เหลือแต่หน้า activate |
+| เตือนล่วงหน้า | 7 วัน (`kLicenseWarnDays`) เป็นแถบบนหน้าแรก |
+| dev/เทส | **ไม่มีทางข้าม** — เครื่อง dev ต้องออก key ของตัวเองใช้ |
+| ต่ออายุ | ส่ง `.lic` ใบใหม่มาเลือกทับ (หน้า activate หรือ ตั้งค่า → ใบอนุญาต) |
 
-### ที่ยังไม่ได้เคาะ — ต้องถามเจ้าของก่อนเขียน
-1. **ยังไม่ activate / หมดอายุแล้วทำอะไรได้บ้าง** — ล็อกทั้งแอปเหลือแต่หน้า activate · หรือค้นได้แบบจำกัด · หรือทดลองใช้อัตโนมัติ X วันตอนลงครั้งแรก
-2. **เตือนล่วงหน้ากี่วันก่อนหมดอายุ** (เสนอ 7 วัน เป็นแถบบนหน้าแรก)
-3. **ตอน dev/เทสจะข้ามการตรวจยังไง** (เสนอ: debug build ข้ามให้ + ขึ้นแถบว่าอยู่โหมด dev)
-4. **ต่ออายุ = ส่งไฟล์ `.lic` ใบใหม่ทับใบเดิม ใช่ไหม**
+### 🔺 ลำดับที่เจ้าของต้องทำเอง ก่อนแอปจะเปิดได้
+1. `dart run tool/keygen.dart` → private key ไปอยู่ `%USERPROFILE%\.crf-keys\ed25519_private.key` (**สำรองไว้ · หายแล้วออกใบใหม่ให้ลูกค้าเก่าไม่ได้**)
+2. เอา public key ที่พิมพ์ออกมาวางใน `lib/services/license/license_public_key.dart`
+3. เปิดแอป → คัดลอกรหัสเครื่อง → `dart run tool/licgen.dart --machine <รหัส> --days 0`
+4. กดเลือกไฟล์ `.lic` ที่ได้
+> ข้ามข้อ 2 = แอปขึ้น "โปรแกรมยังตั้งค่าไม่ครบ" และไม่รับใบอนุญาตใด ๆ · `.lic` และ `.crf-keys/` ถูกใส่ `.gitignore` แล้ว
 
-### โครงที่วางไว้ (ยังไม่ได้เขียน)
+### ไฟล์ที่เพิ่ม
 ```
-lib/services/license/
-  machine_id.dart       fingerprint เครื่อง (MachineGuid + volume serial → sha256)
-  license_payload.dart  {version, machineId, days, issuedAt, note} + canonical json
-  license_verifier.dart ตรวจลายเซ็น Ed25519 ด้วย public key ที่ฝังในแอป
-  license_store.dart    อ่าน/เขียนสถานะ + DPAPI (CryptProtectData ผ่าน win32 + ffi)
-  license_service.dart  สถานะรวม: valid / expired / tampered / none + วันคงเหลือ
-lib/ui/license/activate_screen.dart   โชว์ Machine ID ให้ copy + ปุ่มเลือกไฟล์ .lic
-tool/keygen.dart        สร้างคู่กุญแจครั้งแรก (รันครั้งเดียว · private key เก็บนอก repo)
-tool/licgen.dart        เจ้าของออก key: dart run tool/licgen.dart --machine XXX --days 30
+lib/services/license/  license_payload · license_verifier · license_public_key(ว่างรอเจ้าของ)
+                       machine_id · license_store(DPAPI + MemoryLicenseStore สำหรับเทส) · license_service
+lib/ui/license/        license_gate · license_controller · activate_screen · license_banner
+tool/                  keygen.dart · licgen.dart
+test/                  license_test.dart (15) · license_gate_test.dart (3)
 ```
-- package ที่ต้องเพิ่ม: `cryptography` (Ed25519 pure Dart) · `ffi` + `win32` (DPAPI)
-- **ความจริงที่ยอมรับแล้ว:** ตรวจสิทธิ์ฝั่งเครื่องลูกค้าล้วน ๆ กันคนตั้งใจ patch exe ไม่ได้ 100% เป้าหมายคือ "แพงพอจนไม่คุ้มแกะ"
-
----
+- package ที่เพิ่ม: `ed25519_edwards` · `crypto` · `win32` · `ffi`
+- **ความจริงที่ยอมรับแล้ว:** ตรวจฝั่งเครื่องลูกค้าล้วน ๆ กันคนตั้งใจ patch exe ไม่ได้ 100% เป้าหมายคือ "แพงพอจนไม่คุ้มแกะ"
+- ยังไม่ได้ audit (เสนอ `opus-xhigh-auditor` 2 ตัว) และ **ยังไม่เคยรันบน Windows จริง** — ส่วน DPAPI/registry ทั้งก้อนพิสูจน์ได้เฉพาะบนเครื่องเจ้าของ
 
 ## 9. กับดักที่ session ใหม่ต้องรู้ (เจอมาแล้วจริง)
 1. **`flutter analyze` ผ่าน ไม่ได้แปลว่าวาดออก** — `BoxDecoration` ที่ `Border` สีไม่เท่ากันทุกด้าน + `borderRadius` จะ assert ตอน paint แล้ววาดลูกไม่ออกทั้งก้อน · แตะ UI แล้วให้ดูภาพจริงด้วย `RENDER_SHOTS=1 flutter test test/snapshot_test.dart --update-goldens`

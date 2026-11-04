@@ -7,6 +7,8 @@ import 'package:context_researcher_file/app/app_state.dart';
 import 'package:context_researcher_file/app/theme/app_theme.dart';
 import 'package:context_researcher_file/app/theme/motion.dart';
 import 'package:context_researcher_file/data/db.dart';
+import 'package:context_researcher_file/services/license/license_service.dart';
+import 'package:context_researcher_file/ui/license/activate_screen.dart';
 import 'package:context_researcher_file/ui/projects/projects_screen.dart';
 import 'package:context_researcher_file/ui/search/search_screen.dart';
 import 'package:context_researcher_file/ui/settings/settings_screen.dart';
@@ -111,6 +113,24 @@ void main() {
     await expectLater(
       find.byType(SettingsScreen),
       matchesGoldenFile('shots/settings_about.png'),
+    );
+
+    // หน้าล็อก (ยังไม่ได้ใส่ใบอนุญาต)
+    await tester.pumpWidget(
+      wrap(
+        ActivateScreen(
+          state: const LicenseState(
+            status: LicenseStatus.none,
+            machineId: '0123456789abcdef0123456789abcdef',
+          ),
+          onPick: (_) async {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byType(ActivateScreen),
+      matchesGoldenFile('shots/license_activate.png'),
     );
 
     db.dispose();

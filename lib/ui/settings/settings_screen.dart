@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +13,8 @@ import '../../app/theme/motion.dart';
 import '../../data/db.dart';
 import '../../domain/models.dart';
 import '../../services/file_opener.dart';
+import '../../services/license/machine_id.dart';
+import '../license/license_controller.dart';
 import '../widgets/aurora_background.dart';
 import '../widgets/common.dart';
 
@@ -196,6 +199,7 @@ class SettingsScreen extends StatelessWidget {
                               ],
                             ),
                           ),
+                          const _LicenseSection(),
                           const _Section(
                             title: 'ข้อมูลที่เก็บไว้',
                             subtitle: 'index เก็บข้อความของไฟล์ไว้ในเครื่องนี้เท่านั้น',
@@ -389,6 +393,86 @@ class _KindToggle extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// สถานะใบอนุญาต + รหัสเครื่อง + ใส่ใบใหม่เพื่อต่ออายุ
+/// (ไม่มี LicenseGate ครอบ เช่นตอนเรนเดอร์หน้านี้ในเทส = ไม่แสดงอะไร)
+class _LicenseSection extends StatelessWidget {
+  const _LicenseSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final d = D.of(context);
+    final controller = LicenseController.maybeOf(context);
+    if (controller == null) return const SizedBox.shrink();
+    final state = controller.state;
+    final machine = state.machineId;
+    final left = state.daysLeft;
+    return _Section(
+      title: 'ใบอนุญาต',
+      subtitle: state.perpetual
+          ? 'ใช้ได้ตลอดไป (ผูกกับเครื่องนี้)'
+          : left == null
+          ? null
+          : 'เหลืออีก $left วัน',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (state.payload?.name.isNotEmpty ?? false)
+            Text(
+              'ออกให้: ${state.payload!.name}',
+              style: TextStyle(fontSize: d.fontBody, color: AppColors.textBody),
+            ),
+          if (machine != null) ...[
+            SizedBox(height: d.gap - 4),
+            Row(
+              children: [
+                Expanded(
+                  child: SelectableText(
+                    'รหัสเครื่อง: ${MachineId.format(machine)}',
+                    style: TextStyle(fontSize: d.fontSm, color: AppColors.textMuted),
+                  ),
+                ),
+                AsyncIconButton(
+                  tooltip: 'คัดลอกรหัสเครื่อง',
+                  icon: Icons.copy_all_outlined,
+                  onPressed: () async {
+                    await Clipboard.setData(ClipboardData(text: MachineId.format(machine)));
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('คัดลอกรหัสเครื่องแล้ว'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
+          SizedBox(height: d.gap),
+          OutlinedButton.icon(
+            onPressed: () async {
+              final picked = await FilePicker.platform.pickFiles(
+                dialogTitle: 'เลือกไฟล์ใบอนุญาตใบใหม่',
+                type: FileType.custom,
+                allowedExtensions: const ['lic'],
+              );
+              final path = picked?.files.single.path;
+              if (path == null) return;
+              final error = controller.activate(path);
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(error ?? 'ใส่ใบอนุญาตใบใหม่แล้ว')),
+              );
+            },
+            icon: Icon(Icons.vpn_key_outlined, size: d.iconSm),
+            label: const Text('ใส่ใบอนุญาตใบใหม่ (ต่ออายุ)'),
+          ),
+        ],
       ),
     );
   }

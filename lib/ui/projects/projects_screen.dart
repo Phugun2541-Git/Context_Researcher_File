@@ -7,6 +7,7 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_dimens.dart';
 import '../../app/theme/motion.dart';
 import '../../domain/models.dart';
+import '../license/license_banner.dart';
 import '../search/search_screen.dart';
 import '../settings/settings_screen.dart';
 import '../widgets/aurora_background.dart';
@@ -31,6 +32,7 @@ class ProjectsScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const LicenseBanner(),
                 // แถบบน: ปุ่มทำงานชิดซ้าย · ตั้งค่าอยู่ขวาสุด
                 FadeSlideIn(
                   child: Row(
