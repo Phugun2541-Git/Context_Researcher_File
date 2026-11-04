@@ -150,7 +150,9 @@ bool Win32Window::Create(const std::wstring& title,
 }
 
 bool Win32Window::Show() {
-  return ShowWindow(window_handle_, SW_SHOWNORMAL);
+  // เปิดมาเต็มจอเสมอ — layout 3 คอลัมน์ต้องการความกว้าง
+  // ตัวนี้ถูกเรียกหลัง Flutter เรนเดอร์เฟรมแรก จึงเป็นจุดเดียวที่กำหนดสถานะหน้าต่างได้จริง
+  return ShowWindow(window_handle_, SW_SHOWMAXIMIZED);
 }
 
 // static
@@ -186,6 +188,17 @@ Win32Window::MessageHandler(HWND hwnd,
         PostQuitMessage(0);
       }
       return 0;
+
+    // กันย่อหน้าต่างจนเล็กเกินจน layout ล้น (ค่าเป็น logical px คูณตาม DPI ของจอ)
+    case WM_GETMINMAXINFO: {
+      HMONITOR monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+      UINT dpi = FlutterDesktopGetDpiForMonitor(monitor);
+      double scale_factor = dpi / 96.0;
+      auto info = reinterpret_cast<MINMAXINFO*>(lparam);
+      info->ptMinTrackSize.x = static_cast<LONG>(980 * scale_factor);
+      info->ptMinTrackSize.y = static_cast<LONG>(640 * scale_factor);
+      return 0;
+    }
 
     case WM_DPICHANGED: {
       auto newRectSize = reinterpret_cast<RECT*>(lparam);

@@ -97,7 +97,7 @@ class _SearchPanelState extends State<SearchPanel> {
           onChanged: state.setQuery,
           onSubmitted: (_) => state.canSearch ? state.runSearch() : null,
           decoration: InputDecoration(
-            hintText: 'พิมพ์คำหรือประโยคที่จะค้น',
+            hintText: 'คำหรือประโยคที่จะค้น',
             prefixIcon: Icon(Icons.search, size: d.icon, color: AppColors.textMuted),
             suffixIcon: _controller.text.isEmpty
                 ? null
@@ -132,7 +132,7 @@ class _SearchPanelState extends State<SearchPanel> {
         if (state.activeRoots.isEmpty) ...[
           SizedBox(height: d.gap),
           Text(
-            'ต้องเลือกโฟลเดอร์หรือไฟล์ก่อน — ระบบไม่ค้นทั้งเครื่อง',
+            'เลือกโฟลเดอร์หรือไฟล์ก่อน',
             style: TextStyle(fontSize: d.fontSm, color: AppColors.warning),
           ),
         ],
@@ -152,21 +152,38 @@ class _SearchPanelState extends State<SearchPanel> {
           ),
         ),
         SizedBox(height: d.gap),
+        // ปุ่มคู่นี้อยู่ในแผงแคบ → บีบ padding และให้ป้ายย่อได้ กันล้นตอนย่อหน้าต่าง
         Row(
           children: [
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: _pickFolder,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                  visualDensity: VisualDensity.compact,
+                ),
                 icon: Icon(Icons.folder_outlined, size: d.iconSm),
-                label: const Text('โฟลเดอร์'),
+                label: const Text(
+                  'โฟลเดอร์',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
             SizedBox(width: d.gap),
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: _pickFiles,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                  visualDensity: VisualDensity.compact,
+                ),
                 icon: Icon(Icons.description_outlined, size: d.iconSm),
-                label: const Text('ไฟล์'),
+                label: const Text(
+                  'ไฟล์',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
           ],
@@ -202,22 +219,27 @@ class _SearchPanelState extends State<SearchPanel> {
         // ── index / progress / message ──
         if (isProject) ...[
           SizedBox(height: d.gap),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '${state.currentProject?.fileCount ?? 0} ไฟล์ใน index',
-                  style: TextStyle(fontSize: d.fontSm, color: AppColors.textMuted),
-                ),
+          Text(
+            '${state.currentProject?.fileCount ?? 0} ไฟล์ใน index',
+            style: TextStyle(fontSize: d.fontSm, color: AppColors.textMuted),
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton.icon(
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                visualDensity: VisualDensity.compact,
               ),
-              TextButton.icon(
-                onPressed: state.indexing
-                    ? null
-                    : () => state.indexCurrentProject(force: true),
-                icon: Icon(Icons.refresh, size: d.iconSm),
-                label: const Text('สร้าง index ใหม่'),
+              onPressed: state.indexing
+                  ? null
+                  : () => state.indexCurrentProject(force: true),
+              icon: Icon(Icons.refresh, size: d.iconSm),
+              label: const Text(
+                'สร้าง index ใหม่',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-            ],
+            ),
           ),
         ],
         if (state.progress != null) ...[

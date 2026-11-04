@@ -24,36 +24,54 @@ class SearchScreen extends StatelessWidget {
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(d.pagePad * 0.6),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(
-                width: d.sidePanelW,
-                child: const PanelCard(child: SearchPanel()),
-              ),
-              SizedBox(width: d.gapLg * 0.8),
-              Expanded(
-                flex: hasPreview ? 10 : 24,
-                child: const ResultsList(),
-              ),
-              // preview เปิด/ปิดแบบลื่น ไม่กระชาก
-              AnimatedSize(
-                duration: Motion.base,
-                curve: Motion.curve,
-                child: hasPreview
-                    ? SizedBox(width: d.gapLg * 0.8)
-                    : const SizedBox.shrink(),
-              ),
-              if (hasPreview)
-                Expanded(
-                  flex: 14,
-                  child: FadeSlideIn(
-                    key: ValueKey(state.selectedFile!.path),
-                    offsetY: 0,
-                    child: const PreviewPane(),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // จอแคบ: แบ่ง 3 คอลัมน์แล้วแต่ละช่องเล็กเกินอ่าน → ให้ preview เปิดทับผลค้นหาแทน
+              final stacked = constraints.maxWidth < 1150;
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(
+                    width: stacked ? d.rw(30).clamp(260, 320) : d.sidePanelW,
+                    child: const PanelCard(child: SearchPanel()),
                   ),
-                ),
-            ],
+                  SizedBox(width: d.gapLg * 0.8),
+                  if (stacked)
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          const Positioned.fill(child: ResultsList()),
+                          if (hasPreview)
+                            Positioned.fill(
+                              child: FadeSlideIn(
+                                key: ValueKey(state.selectedFile!.path),
+                                offsetY: 8,
+                                child: const PreviewPane(),
+                              ),
+                            ),
+                        ],
+                      ),
+                    )
+                  else ...[
+                    Expanded(
+                      flex: hasPreview ? 10 : 24,
+                      child: const ResultsList(),
+                    ),
+                    if (hasPreview) ...[
+                      SizedBox(width: d.gapLg * 0.8),
+                      Expanded(
+                        flex: 14,
+                        child: FadeSlideIn(
+                          key: ValueKey(state.selectedFile!.path),
+                          offsetY: 0,
+                          child: const PreviewPane(),
+                        ),
+                      ),
+                    ],
+                  ],
+                ],
+              );
+            },
           ),
         ),
       ),
