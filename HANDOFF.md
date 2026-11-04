@@ -1,6 +1,6 @@
 # HANDOFF — Context Researcher File
 
-> อัปเดตล่าสุด: 2026-11-04 · รอบ 3 (UX phase: ฟอนต์ไทย · พื้นหลังไล่สี · โลโก้/ไอคอนแอป · ขัดหน้าจอ)
+> อัปเดตล่าสุด: 2026-11-04 · จบรอบ 3 (UX phase) · **session ถัดไปเริ่มที่ §8 งาน license**
 > กฎ = `CLAUDE.md` · วิธีทำงาน = `SKILL.md`
 
 ## 0. ผลเทสรอบ 1 บนแอปจริง (เจ้าของรัน)
@@ -160,3 +160,50 @@ lib/
 4. รองรับ TIS-620 (ต้องเพิ่ม decoder เอง)
 5. ปุ่มหยุดกลางคัน (cancel) ตอน index/scan ไฟล์เยอะ (ตอนนี้มี `cancelSearch()` ใน state แล้วแต่ยังไม่ผูกปุ่มใน UI)
 6. จำคำค้นล่าสุดต่อโปรเจค
+
+
+---
+
+## 8. 🔜 งานถัดไป — License key แบบออฟไลน์ (ยังไม่เริ่มเขียนโค้ด)
+
+### ที่เจ้าของเคาะแล้ว (ห้ามเปลี่ยนเองโดยไม่ถาม)
+| หัวข้อ | ที่เคาะ |
+|---|---|
+| รูปแบบ key | **ไฟล์ `.lic`** ที่ลูกค้ากดเลือก (ไม่ใช่พิมพ์ key สั้น) |
+| วิธีกันปลอม | **ลายเซ็น Ed25519** — private key อยู่กับเจ้าของเท่านั้น (ห้ามเข้า repo) · ฝังเฉพาะ public key ในแอป ⇒ แกะ exe ก็ออก key เองไม่ได้ |
+| ผูกเครื่อง | **1 key ต่อ 1 เครื่อง** — fingerprint จาก MachineGuid (registry) + volume serial ของไดรฟ์ระบบ |
+| ที่เก็บสถานะ | **ไม่เก็บใน `index.db`** (เปิดแก้ได้ด้วย DB Browser) → ไฟล์แยกใน `%APPDATA%` เข้ารหัสด้วย **Windows DPAPI** (ผูกกับ user account) |
+| กันหมุนนาฬิกา | เก็บ `lastSeenUtc` ทุกครั้งที่เปิดแอป · เวลาปัจจุบันย้อนหลังกว่าเดิมเกิน 1 ชม. = ถือว่าโกง ล็อกทันที |
+| อายุ | ระบุจำนวนวันใน key (เช่น 30) นับจากวันที่ issue |
+
+### ที่ยังไม่ได้เคาะ — ต้องถามเจ้าของก่อนเขียน
+1. **ยังไม่ activate / หมดอายุแล้วทำอะไรได้บ้าง** — ล็อกทั้งแอปเหลือแต่หน้า activate · หรือค้นได้แบบจำกัด · หรือทดลองใช้อัตโนมัติ X วันตอนลงครั้งแรก
+2. **เตือนล่วงหน้ากี่วันก่อนหมดอายุ** (เสนอ 7 วัน เป็นแถบบนหน้าแรก)
+3. **ตอน dev/เทสจะข้ามการตรวจยังไง** (เสนอ: debug build ข้ามให้ + ขึ้นแถบว่าอยู่โหมด dev)
+4. **ต่ออายุ = ส่งไฟล์ `.lic` ใบใหม่ทับใบเดิม ใช่ไหม**
+
+### โครงที่วางไว้ (ยังไม่ได้เขียน)
+```
+lib/services/license/
+  machine_id.dart       fingerprint เครื่อง (MachineGuid + volume serial → sha256)
+  license_payload.dart  {version, machineId, days, issuedAt, note} + canonical json
+  license_verifier.dart ตรวจลายเซ็น Ed25519 ด้วย public key ที่ฝังในแอป
+  license_store.dart    อ่าน/เขียนสถานะ + DPAPI (CryptProtectData ผ่าน win32 + ffi)
+  license_service.dart  สถานะรวม: valid / expired / tampered / none + วันคงเหลือ
+lib/ui/license/activate_screen.dart   โชว์ Machine ID ให้ copy + ปุ่มเลือกไฟล์ .lic
+tool/keygen.dart        สร้างคู่กุญแจครั้งแรก (รันครั้งเดียว · private key เก็บนอก repo)
+tool/licgen.dart        เจ้าของออก key: dart run tool/licgen.dart --machine XXX --days 30
+```
+- package ที่ต้องเพิ่ม: `cryptography` (Ed25519 pure Dart) · `ffi` + `win32` (DPAPI)
+- **ความจริงที่ยอมรับแล้ว:** ตรวจสิทธิ์ฝั่งเครื่องลูกค้าล้วน ๆ กันคนตั้งใจ patch exe ไม่ได้ 100% เป้าหมายคือ "แพงพอจนไม่คุ้มแกะ"
+
+---
+
+## 9. กับดักที่ session ใหม่ต้องรู้ (เจอมาแล้วจริง)
+1. **`flutter analyze` ผ่าน ไม่ได้แปลว่าวาดออก** — `BoxDecoration` ที่ `Border` สีไม่เท่ากันทุกด้าน + `borderRadius` จะ assert ตอน paint แล้ววาดลูกไม่ออกทั้งก้อน · แตะ UI แล้วให้ดูภาพจริงด้วย `RENDER_SHOTS=1 flutter test test/snapshot_test.dart --update-goldens`
+2. **`RichText` ไม่สืบทอด `DefaultTextStyle`** → ได้ฟอนต์คนละตัวกับทั้งแอป ใช้ `Text.rich` เสมอ
+3. **งานที่อ่านไฟล์จริง/Isolate ใน widget test ต้องอยู่ใน `tester.runAsync()`** ไม่งั้นค้างตลอดกาล
+4. **อนิเมชันวนไม่จบ (พื้นหลัง) ทำให้ `pumpAndSettle` ไม่นิ่ง** → ใน test ครอบด้วย `MediaQuery(disableAnimations: true)`
+5. **เทส PDF ถูก skip โดยค่าเริ่มต้น** (ไม่มี PDFium ในคอนเทนเนอร์) ต้องตั้ง `PDFIUM_MODULE_PATH` ถึงรัน
+6. **แก้ schema ต้องต่อ step ท้าย `_steps` เท่านั้น** (`lib/data/db.dart`) step ที่ปล่อยแล้วห้ามแก้
+7. **ห้าม `git add -A` ตอนยังไม่ได้แยกกอง** — เคยทำให้ 5 เรื่องรวมเป็น commit เดียวมาแล้ว
