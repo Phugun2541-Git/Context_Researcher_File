@@ -64,8 +64,20 @@ class _ProjectCardState extends State<ProjectCard> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.folder_rounded,
-                      size: d.icon, color: AppColors.accent),
+                  // กล่องไอคอนสีอ่อน ช่วยให้การ์ดมีจุดนำสายตาโดยไม่ต้องใช้สีเต็มใบ
+                  Container(
+                    width: d.icon * 1.7,
+                    height: d.icon * 1.7,
+                    decoration: BoxDecoration(
+                      color: AppColors.accentSurface,
+                      borderRadius: BorderRadius.circular(d.radius),
+                    ),
+                    child: Icon(
+                      Icons.folder_rounded,
+                      size: d.icon,
+                      color: AppColors.accent,
+                    ),
+                  ),
                   SizedBox(width: d.gap),
                   Expanded(
                     child: Text(
@@ -85,23 +97,75 @@ class _ProjectCardState extends State<ProjectCard> {
                     child: IconButton(
                       tooltip: 'ลบโปรเจค',
                       onPressed: widget.onDelete,
-                      icon: Icon(Icons.delete_outline,
-                          size: d.iconSm, color: AppColors.textMuted),
+                      icon: Icon(
+                        Icons.delete_outline,
+                        size: d.iconSm,
+                        color: AppColors.textMuted,
+                      ),
                     ),
                   ),
                 ],
               ),
+              SizedBox(height: d.gap),
+
+              // โฟลเดอร์ที่ผูกไว้ — ให้เห็นตั้งแต่หน้าแรกว่าโปรเจคนี้ชี้ไปที่ไหน
+              for (final root in p.roots.take(2))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Row(
+                    children: [
+                      Icon(
+                        root.isFile
+                            ? Icons.description_outlined
+                            : Icons.folder_outlined,
+                        size: d.fontSm,
+                        color: AppColors.textMuted,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          root.path,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: d.fontSm,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (p.roots.length > 2)
+                Text(
+                  '+ อีก ${p.roots.length - 2} ตำแหน่ง',
+                  style: TextStyle(fontSize: d.fontSm, color: AppColors.textMuted),
+                ),
+              if (p.roots.isEmpty)
+                Text(
+                  'ยังไม่ได้ผูกโฟลเดอร์',
+                  style: TextStyle(fontSize: d.fontSm, color: AppColors.warning),
+                ),
+
               const Spacer(),
-              Text(
-                '${p.roots.length} ตำแหน่งที่ผูกไว้ · ${p.fileCount} ไฟล์ใน index',
-                style: TextStyle(fontSize: d.fontSm, color: AppColors.textBody),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                indexed == null
-                    ? 'ยังไม่เคย index'
-                    : 'index ล่าสุด ${DateFormat('d MMM yy HH:mm').format(indexed)}',
-                style: TextStyle(fontSize: d.fontSm, color: AppColors.textMuted),
+              Divider(height: d.gapLg, color: AppColors.border),
+              Row(
+                children: [
+                  Icon(Icons.description_outlined,
+                      size: d.fontSm, color: AppColors.textMuted),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${p.fileCount} ไฟล์',
+                    style: TextStyle(fontSize: d.fontSm, color: AppColors.textBody),
+                  ),
+                  const Spacer(),
+                  Text(
+                    indexed == null
+                        ? 'ยังไม่เคย index'
+                        : DateFormat('d MMM yy HH:mm').format(indexed),
+                    style: TextStyle(fontSize: d.fontSm, color: AppColors.textMuted),
+                  ),
+                ],
               ),
             ],
           ),

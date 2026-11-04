@@ -34,3 +34,16 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  fonts:
+    # Anuphan (OFL-1.1) — ไทย+ละตินในฟอนต์เดียว ดูสะอาดและอ่านง่ายทั้งสองภาษา
+    - family: Anuphan
+      fonts:
+        - asset: assets/fonts/Anuphan-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Anuphan-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Anuphan-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Anuphan-Bold.ttf
+          weight: 700

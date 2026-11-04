@@ -55,10 +55,12 @@ class HighlightedText extends StatelessWidget {
     if (length <= 0 || start < 0 || start + length > text.length) {
       return Text(text, maxLines: maxLines, overflow: TextOverflow.ellipsis, style: style);
     }
-    return RichText(
+    // ใช้ Text.rich ไม่ใช่ RichText เพราะ RichText ไม่สืบทอด DefaultTextStyle
+    // จะทำให้ข้อความส่วนนี้ได้ฟอนต์คนละตัวกับทั้งแอป
+    return Text.rich(
       maxLines: maxLines,
       overflow: TextOverflow.ellipsis,
-      text: TextSpan(style: style, children: [
+      TextSpan(style: style, children: [
         TextSpan(text: text.substring(0, start)),
         TextSpan(
           text: text.substring(start, start + length),

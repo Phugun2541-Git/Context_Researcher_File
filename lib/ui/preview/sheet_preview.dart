@@ -168,7 +168,8 @@ class _SheetPreviewState extends State<SheetPreview> {
 
   Widget _sheetTabs(List<String> sheets, String active, D d) {
     return SizedBox(
-      height: d.fieldH * 0.8,
+      // เผื่อความสูงให้ chip ไม่โดนตัดขอบล่าง
+      height: d.fieldH * 1.05,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(horizontal: d.gap, vertical: 4),

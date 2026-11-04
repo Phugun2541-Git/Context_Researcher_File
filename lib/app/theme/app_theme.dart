@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
 /// ThemeData กลาง — ดึงค่าจาก AppColors ทั้งหมด
+/// ฟอนต์หลัก bundle มากับแอป (ไทย+ละติน) — ไม่พึ่งฟอนต์ของเครื่องเพื่อให้หน้าตาเหมือนกันทุกเครื่อง
+const kFontFamily = 'Anuphan';
+
 ThemeData buildAppTheme() {
   final base = isDarkTheme
       ? ThemeData.dark(useMaterial3: true)
       : ThemeData.light(useMaterial3: true);
   return base.copyWith(
+    // ตั้งที่ ThemeData เพื่อให้ widget ที่ไม่ได้ระบุ style เองได้ฟอนต์เดียวกันหมด
     scaffoldBackgroundColor: AppColors.scaffoldBg,
     colorScheme: base.colorScheme.copyWith(
       primary: AppColors.accent,
@@ -17,9 +21,11 @@ ThemeData buildAppTheme() {
       error: AppColors.danger,
     ),
     textTheme: base.textTheme.apply(
+      fontFamily: kFontFamily,
       bodyColor: AppColors.textBody,
       displayColor: AppColors.textStrong,
     ),
+    primaryTextTheme: base.primaryTextTheme.apply(fontFamily: kFontFamily),
     dividerTheme: DividerThemeData(color: AppColors.border, thickness: 1),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,

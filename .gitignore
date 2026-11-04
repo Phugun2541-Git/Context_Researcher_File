@@ -22,3 +22,6 @@ windows/flutter/generated_plugins.cmake
 # ไฟล์ระบบ
 Thumbs.db
 desktop.ini
+
+# ภาพ snapshot ที่ golden test สร้าง (ต่างกันเล็กน้อยทุกเครื่อง)
+test/shots/

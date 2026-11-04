@@ -110,18 +110,22 @@ class _FileResultCardState extends State<_FileResultCard> {
         child: AnimatedContainer(
           duration: Motion.fast,
           curve: Motion.curve,
-          padding: EdgeInsets.all(d.gapLg * 0.8),
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: selected ? AppColors.accentSurface : AppColors.surface,
             borderRadius: BorderRadius.circular(d.radiusLg),
-            border: Border(
-              // แถบสีซ้าย = ชนิดไฟล์ กวาดตาแยกประเภทได้โดยไม่ต้องอ่านป้าย
-              left: BorderSide(color: colorOfKind(r.kind), width: 3),
-              top: BorderSide(color: _edgeColor(selected)),
-              right: BorderSide(color: _edgeColor(selected)),
-              bottom: BorderSide(color: _edgeColor(selected)),
-            ),
+            // ขอบต้องสีเดียวกันทุกด้านเมื่อใช้ borderRadius (ไม่งั้น Flutter assert ตอน paint)
+            // แถบสีชนิดไฟล์จึงวาดเป็นแถบลูกด้านในแทน
+            border: Border.all(color: _edgeColor(selected)),
           ),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(width: 3, color: colorOfKind(r.kind)),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.all(d.gapLg * 0.8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -227,7 +231,12 @@ class _FileResultCardState extends State<_FileResultCard> {
                   ],
                 ),
               ],
-            ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

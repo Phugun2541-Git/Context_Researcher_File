@@ -34,9 +34,16 @@ void main() {
     Motion.reduced = false;
   });
 
+  /// พื้นหลังของแอปวนภาพตลอดเวลา ทำให้ pumpAndSettle ไม่มีวันนิ่ง
+  /// จึงปิดการเคลื่อนไหวผ่าน MediaQuery เหมือนที่ระบบปฏิบัติการสั่งได้จริง
   Widget wrap(Widget child) => ChangeNotifierProvider.value(
         value: state,
-        child: MaterialApp(home: child),
+        child: MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(disableAnimations: true),
+            child: child,
+          ),
+        ),
       );
 
   Future<void> setWindow(WidgetTester tester, Size size) async {

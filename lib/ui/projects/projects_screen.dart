@@ -9,6 +9,8 @@ import '../../app/theme/motion.dart';
 import '../../domain/models.dart';
 import '../search/search_screen.dart';
 import '../settings/settings_screen.dart';
+import '../widgets/app_logo.dart';
+import '../widgets/aurora_background.dart';
 import '../widgets/common.dart';
 import 'project_card.dart';
 
@@ -23,112 +25,118 @@ class ProjectsScreen extends StatelessWidget {
     final projects = state.projects;
 
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(d.pagePad),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              FadeSlideIn(
-                child: Wrap(
-                  alignment: WrapAlignment.spaceBetween,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: d.gap,
-                  runSpacing: d.gap,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Context Researcher',
-                          style: TextStyle(
-                            fontSize: d.fontDisplay,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textStrong,
-                            letterSpacing: -0.4,
+      body: AuroraBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.all(d.pagePad),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FadeSlideIn(
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: d.gap,
+                    runSpacing: d.gap,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AppLogo(size: d.icon * 2.1),
+                          SizedBox(width: d.gap + 2),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Context Researcher',
+                                style: TextStyle(
+                                  fontSize: d.fontDisplay,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textStrong,
+                                  letterSpacing: -0.4,
+                                ),
+                              ),
+                              SizedBox(height: d.gap - 4),
+                              Text(
+                                'ค้นคำในเอกสาร PDF · Excel · Word · CSV/TXT ตามโฟลเดอร์ที่เลือก',
+                                style: TextStyle(fontSize: d.fontBody, color: AppColors.textMuted),
+                              ),
+                            ],
                           ),
-                        ),
-                        SizedBox(height: d.gap - 4),
-                        Text(
-                          'ค้นคำในเอกสาร PDF · Excel · Word · CSV/TXT ตามโฟลเดอร์ที่เลือก',
-                          style: TextStyle(
-                            fontSize: d.fontBody,
-                            color: AppColors.textMuted,
+                        ],
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            tooltip: 'ตั้งค่า',
+                            onPressed: () =>
+                                Navigator.of(context).push(_route(const SettingsScreen())),
+                            icon: Icon(Icons.settings_outlined, size: d.icon),
                           ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          tooltip: 'ตั้งค่า',
-                          onPressed: () => Navigator.of(context)
-                              .push(_route(const SettingsScreen())),
-                          icon: Icon(Icons.settings_outlined, size: d.icon),
-                        ),
-                        SizedBox(width: d.gap - 4),
-                        OutlinedButton.icon(
-                          onPressed: () {
-                            state.startAdHoc();
-                            Navigator.of(context).push(_route(const SearchScreen()));
-                          },
-                          icon: Icon(Icons.bolt_outlined, size: d.iconSm),
-                          label: const Text('ค้นแบบไม่ผูกโปรเจค'),
-                        ),
-                        SizedBox(width: d.gap),
-                        FilledButton.icon(
-                          onPressed: () => _createProject(context),
-                          icon: Icon(Icons.add, size: d.iconSm),
-                          label: const Text('โปรเจคใหม่'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: d.gapLg * 1.4),
-              Expanded(
-                child: AnimatedSwitcher(
-                  duration: Motion.base,
-                  child: projects.isEmpty
-                      ? EmptyState(
-                          key: const ValueKey('empty'),
-                          icon: Icons.folder_open_outlined,
-                          title: 'ยังไม่มีโปรเจค',
-                          detail: 'ผูกโฟลเดอร์งานไว้ในโปรเจค '
-                              'ครั้งหน้าเปิดมาค้นได้เลย',
-                          action: FilledButton.icon(
+                          SizedBox(width: d.gap - 4),
+                          OutlinedButton.icon(
+                            onPressed: () {
+                              state.startAdHoc();
+                              Navigator.of(context).push(_route(const SearchScreen()));
+                            },
+                            icon: Icon(Icons.bolt_outlined, size: d.iconSm),
+                            label: const Text('ค้นแบบไม่ผูกโปรเจค'),
+                          ),
+                          SizedBox(width: d.gap),
+                          FilledButton.icon(
                             onPressed: () => _createProject(context),
-                            icon: const Icon(Icons.add),
-                            label: const Text('สร้างโปรเจคแรก'),
+                            icon: Icon(Icons.add, size: d.iconSm),
+                            label: const Text('โปรเจคใหม่'),
                           ),
-                        )
-                      : GridView.builder(
-                          key: ValueKey('grid-${projects.length}'),
-                          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: d.rw(26).clamp(260, 360),
-                            mainAxisExtent: d.rh(22).clamp(150, 190),
-                            crossAxisSpacing: d.gapLg,
-                            mainAxisSpacing: d.gapLg,
-                          ),
-                          itemCount: projects.length,
-                          itemBuilder: (context, i) => FadeSlideIn(
-                            delay: Motion.stagger(i),
-                            child: ProjectCard(
-                              project: projects[i],
-                              onOpen: () {
-                                state.openProject(projects[i]);
-                                Navigator.of(context)
-                                    .push(_route(const SearchScreen()));
-                              },
-                              onDelete: () => _confirmDelete(context, projects[i]),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: d.gapLg * 1.4),
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: Motion.base,
+                    child: projects.isEmpty
+                        ? EmptyState(
+                            key: const ValueKey('empty'),
+                            icon: Icons.folder_open_outlined,
+                            title: 'ยังไม่มีโปรเจค',
+                            detail:
+                                'ผูกโฟลเดอร์งานไว้ในโปรเจค '
+                                'ครั้งหน้าเปิดมาค้นได้เลย',
+                            action: FilledButton.icon(
+                              onPressed: () => _createProject(context),
+                              icon: const Icon(Icons.add),
+                              label: const Text('สร้างโปรเจคแรก'),
+                            ),
+                          )
+                        : GridView.builder(
+                            key: ValueKey('grid-${projects.length}'),
+                            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: d.rw(26).clamp(260, 360),
+                              mainAxisExtent: d.rh(22).clamp(150, 190),
+                              crossAxisSpacing: d.gapLg,
+                              mainAxisSpacing: d.gapLg,
+                            ),
+                            itemCount: projects.length,
+                            itemBuilder: (context, i) => FadeSlideIn(
+                              delay: Motion.stagger(i),
+                              child: ProjectCard(
+                                project: projects[i],
+                                onOpen: () {
+                                  state.openProject(projects[i]);
+                                  Navigator.of(context).push(_route(const SearchScreen()));
+                                },
+                                onDelete: () => _confirmDelete(context, projects[i]),
+                              ),
                             ),
                           ),
-                        ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -136,21 +144,20 @@ class ProjectsScreen extends StatelessWidget {
   }
 
   Route<void> _route(Widget child) => PageRouteBuilder<void>(
-        transitionDuration: Motion.base,
-        reverseTransitionDuration: Motion.fast,
-        pageBuilder: (_, __, ___) => child,
-        transitionsBuilder: (_, animation, __, child) {
-          final curved = CurvedAnimation(parent: animation, curve: Motion.curve);
-          return FadeTransition(
-            opacity: curved,
-            child: SlideTransition(
-              position: Tween(begin: const Offset(0, 0.02), end: Offset.zero)
-                  .animate(curved),
-              child: child,
-            ),
-          );
-        },
+    transitionDuration: Motion.base,
+    reverseTransitionDuration: Motion.fast,
+    pageBuilder: (_, __, ___) => child,
+    transitionsBuilder: (_, animation, __, child) {
+      final curved = CurvedAnimation(parent: animation, curve: Motion.curve);
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween(begin: const Offset(0, 0.02), end: Offset.zero).animate(curved),
+          child: child,
+        ),
       );
+    },
+  );
 
   Future<void> _createProject(BuildContext context) async {
     final state = context.read<AppState>();
@@ -173,14 +180,9 @@ class ProjectsScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('ลบโปรเจคนี้?'),
-        content: Text(
-          'ลบ "${project.name}" และ index ที่เก็บไว้ · ไฟล์เอกสารจริงไม่ถูกลบ',
-        ),
+        content: Text('ลบ "${project.name}" และ index ที่เก็บไว้ · ไฟล์เอกสารจริงไม่ถูกลบ'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('ยกเลิก'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('ยกเลิก')),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () => Navigator.pop(ctx, true),
@@ -218,9 +220,7 @@ class _NewProjectDialogState extends State<_NewProjectDialog> {
   }
 
   Future<void> _pickFolder() async {
-    final dir = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: 'เลือกโฟลเดอร์ของโปรเจค',
-    );
+    final dir = await FilePicker.platform.getDirectoryPath(dialogTitle: 'เลือกโฟลเดอร์ของโปรเจค');
     if (dir != null && mounted) setState(() => _roots.add(dir));
   }
 
@@ -238,13 +238,9 @@ class _NewProjectDialogState extends State<_NewProjectDialog> {
             TextField(
               controller: _controller,
               autofocus: true,
-              decoration: const InputDecoration(
-                hintText: 'ชื่อโปรเจค เช่น RMA',
-              ),
-              onSubmitted: (_) => Navigator.pop(
-                context,
-                _NewProjectResult(_controller.text, _roots),
-              ),
+              decoration: const InputDecoration(hintText: 'ชื่อโปรเจค เช่น RMA'),
+              onSubmitted: (_) =>
+                  Navigator.pop(context, _NewProjectResult(_controller.text, _roots)),
             ),
             SizedBox(height: d.gapLg),
             OutlinedButton.icon(
@@ -270,15 +266,9 @@ class _NewProjectDialogState extends State<_NewProjectDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('ยกเลิก'),
-        ),
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('ยกเลิก')),
         FilledButton(
-          onPressed: () => Navigator.pop(
-            context,
-            _NewProjectResult(_controller.text, _roots),
-          ),
+          onPressed: () => Navigator.pop(context, _NewProjectResult(_controller.text, _roots)),
           child: const Text('สร้าง'),
         ),
       ],

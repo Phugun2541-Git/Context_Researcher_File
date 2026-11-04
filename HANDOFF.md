@@ -1,6 +1,6 @@
 # HANDOFF — Context Researcher File
 
-> อัปเดตล่าสุด: 2026-11-04 · รอบ 2 (แก้บั๊กจากการเทสจริง + ธีมหลายสี + หน้าตั้งค่า)
+> อัปเดตล่าสุด: 2026-11-04 · รอบ 3 (UX phase: ฟอนต์ไทย · พื้นหลังไล่สี · โลโก้/ไอคอนแอป · ขัดหน้าจอ)
 > กฎ = `CLAUDE.md` · วิธีทำงาน = `SKILL.md`
 
 ## 0. ผลเทสรอบ 1 บนแอปจริง (เจ้าของรัน)
@@ -108,7 +108,9 @@ lib/
     search/search_screen.dart (layout 3 คอลัมน์) · search_panel.dart · results_list.dart
     preview/preview_pane.dart · pdf_preview.dart · lines_preview.dart · sheet_preview.dart (ตาราง Excel)
     settings/settings_screen.dart  ธีม · ขนาดตัวอักษร · เอฟเฟกต์ · ชนิดไฟล์ · ล้าง index
-    widgets/common.dart         PanelCard · HighlightedText · HitChip · KindBadge · EmptyState · ScanProgressBar
+    widgets/common.dart         PanelCard · HighlightedText · HitChip · KindBadge · EmptyState · ScanProgressBar · AsyncIconButton · สี/ไอคอนตามชนิดไฟล์
+    widgets/aurora_background.dart  พื้นหลังไล่สีตามธีม (หยุดเมื่อปิดเอฟเฟกต์)
+    widgets/app_logo.dart       โลโก้ CustomPainter (สัดส่วนเดียวกับไอคอนแอป)
 ```
 
 ## 5. การตัดสินใจที่เคาะแล้ว (อย่าย้อนโดยไม่ถาม)
@@ -136,6 +138,18 @@ lib/
 - **หน้าตั้งค่า**: ธีม · ขนาดตัวอักษร · ปิดเอฟเฟกต์เคลื่อนไหว · ชนิดไฟล์ที่จะค้น · ขนาดไฟล์สูงสุด · ที่อยู่+ขนาดไฟล์ index + ปุ่มล้าง index · เวอร์ชัน
 - **สีประจำชนิดไฟล์** (PDF แดง · Excel เขียว · Word น้ำเงิน · Text เทา) ใช้ที่ป้าย ไอคอน และแถบซ้ายการ์ด
 - **กันกดซ้ำ** — `AsyncIconButton` ปิดตัวเอง + ขึ้น spinner จนงานจบ
+
+## 6.6 ที่เพิ่มในรอบ 3 (UX phase)
+- **ฟอนต์ Anuphan (OFL-1.1) bundle มากับแอป** — ไทย+ละตินในฟอนต์เดียว ทุกเครื่องเห็นเหมือนกันโดยไม่พึ่งฟอนต์ระบบ · ⚠️ ก่อนแจกจริงต้องวาง `OFL.txt` ใน `assets/fonts/` (ดู `assets/fonts/NOTICE.md`)
+- **พื้นหลังไล่สี** `AuroraBackground` — วาดด้วย CustomPainter ดึงสีจากธีมที่ใช้อยู่ จึงเปลี่ยนตามธีมเอง · เคลื่อนช้ามาก (28 วินาทีต่อรอบ) และ **หยุดสนิท** เมื่อปิดเอฟเฟกต์ในแอปหรือระบบตั้ง reduce motion
+- **โลโก้ + ไอคอนแอป** — มาร์กหน้ากระดาษ+แว่นขยาย · ในแอปวาดด้วย CustomPainter (`AppLogo`) จึงเปลี่ยนสีตามธีม · ไอคอน Windows อยู่ที่ `windows/runner/resources/app_icon.ico` (สร้างจากสคริปต์ PIL สัดส่วนเดียวกับ `AppLogo`)
+- **การ์ดโปรเจค** แสดงโฟลเดอร์ที่ผูกไว้ + จำนวนไฟล์ + เวลา index ล่าสุด (เดิมว่างกลางการ์ด)
+- **การ์ดเลือกธีม** เป็นภาพจำลองหน้าจอย่อ (การ์ด+ปุ่ม) แทนจุดสี อ่านออกว่าแต่ละธีมหน้าตาอย่างไร
+- **ภาพตัวอย่างหน้าจอ** `docs/ui/*.jpg` (สร้างจาก `test/snapshot_test.dart`)
+
+### 🐞 บั๊กที่เจอจากการเรนเดอร์ภาพ (analyze/เทสเดิมจับไม่ได้)
+1. **การ์ดผลค้นหาไม่แสดงเนื้อหาเลย** — ใส่แถบสีชนิดไฟล์เป็น `Border` ที่สีไม่เท่ากันทุกด้านคู่กับ `borderRadius` ⇒ Flutter assert ตอน paint แล้ววาดลูกไม่ออก · แก้เป็นแถบลูกด้านในที่ clip ตามมุมการ์ด + มีเทส `results_render_test.dart` ล็อกไว้
+2. **ข้อความ snippet ได้ฟอนต์คนละตัวกับทั้งแอป** — `RichText` ไม่สืบทอด `DefaultTextStyle` · เปลี่ยนไปใช้ `Text.rich`
 
 ## 7. งานถัดไปที่เสนอ (รอเจ้าของเคาะ)
 1. **License key แบบออฟไลน์** (เคาะแล้ว: ไฟล์ `.lic` ลายเซ็น Ed25519 · ผูกเครื่อง · เก็บสถานะนอก index.db เข้ารหัสด้วย Windows DPAPI · กันหมุนนาฬิกาถอยหลัง) + CLI ออก key สำหรับเจ้าของ
